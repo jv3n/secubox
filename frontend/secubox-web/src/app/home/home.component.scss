@@ -1,0 +1,101 @@
+.home {
+  padding: 16px;
+
+  h1 {
+    margin-bottom: 24px;
+  }
+}
+
+.columns {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 1rem;
+}
+
+.column {
+  min-width: 220px;
+  flex-shrink: 0;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* === Entrée générique (dossier / fichier) === */
+.entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+
+  transition:
+    background 0.2s,
+    box-shadow 0.2s;
+
+  mat-icon {
+    font-size: 20px;
+    color: #64748b;
+  }
+
+  span {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &:hover {
+    background-color: #e0f2fe;
+  }
+
+  &.selected {
+    background-color: #bae6fd;
+    font-weight: 600;
+    box-shadow: inset 0 0 0 1px #38bdf8;
+  }
+
+  &--folder mat-icon {
+    color: #f59e0b;
+  }
+
+  &--file mat-icon {
+    color: #0ea5e9;
+  }
+}
+
+/* === Context menu === */
+.context-menu {
+  position: fixed;
+  z-index: 1000;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  padding: 4px 0;
+
+  button {
+    width: 100%;
+    padding: 8px 14px;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #f0f9ff;
+    }
+  }
+}
+
+.drop-zone {
+  margin-top: 20px;
+}
