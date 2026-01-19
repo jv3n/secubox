@@ -1,19 +1,13 @@
-import { Directive, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { Directive, ElementRef, HostListener, input, output } from '@angular/core';
+import { FileSystemObject } from '../file-system.model';
+import { FileSystemMouseContext } from './context-menu.model';
 
-@Directive({
-  selector: '[contextMenu]',
-  standalone: true,
-})
-export class ContextMenuDirective<T = any> {
-  @Input('contextMenu') data!: T;
+@Directive({ selector: '[contextMenu]' })
+export class ContextMenuDirective {
+  contextMenu = input.required<FileSystemObject | null>();
 
-  @Output() menuRequested = new EventEmitter<{
-    x: number;
-    y: number;
-    data: T;
-  }>();
-
-  @Output() menuClosed = new EventEmitter<void>();
+  menuRequested = output<FileSystemMouseContext>();
+  menuClosed = output<void>();
 
   constructor(private readonly el: ElementRef<HTMLElement>) {}
 
@@ -26,7 +20,7 @@ export class ContextMenuDirective<T = any> {
     this.menuRequested.emit({
       x: event.clientX,
       y: event.clientY,
-      data: this.data,
+      data: this.contextMenu(),
     });
   }
 

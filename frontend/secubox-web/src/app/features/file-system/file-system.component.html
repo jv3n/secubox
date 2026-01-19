@@ -1,0 +1,38 @@
+<section class="columns">
+  @for (col of columns; let i = $index; track i) {
+    <div class="column">
+      <ul class="list">
+        @for (item of col; track item.id) {
+          <li
+            class="entry"
+            [class.entry--folder]="!item.fileExtension"
+            [class.entry--file]="!!item.fileExtension"
+            [class.selected]="selectedObj === item"
+            [contextMenu]="item"
+            (click)="selectObj(item)"
+          >
+            <mat-icon>{{ item.fileExtension ? 'insert_drive_file' : 'folder' }}</mat-icon>
+            <span>{{ item.name }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</section>
+
+<!--  @if (contextMenu.state().visible) {-->
+<!--    <div-->
+<!--      class="context-menu"-->
+<!--      [style.top.px]="contextMenu.state().y"-->
+<!--      [style.left.px]="contextMenu.state().x"-->
+<!--    >-->
+<!--      <button (click)="createFolder()">Nouveau dossier</button>-->
+
+<!--      @if (contextMenu.state().targetFolder) {-->
+<!--        <button (click)="renameFolder()">Renommer</button>-->
+<!--        <button (click)="deleteFolder()">Supprimer</button>-->
+<!--      }-->
+<!--    </div>-->
+<!--  }-->
+
+<!--  <sb-file-drop class="drop-zone" (filesDropped)="onFilesDropped($event)" />-->
