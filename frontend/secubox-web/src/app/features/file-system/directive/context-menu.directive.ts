@@ -1,17 +1,16 @@
-import { Directive, ElementRef, HostListener, input, output } from '@angular/core';
+import { Directive, ElementRef, HostListener, inject, input, output } from '@angular/core';
 import { FileSystemObject } from '../file-system.model';
-import { FileSystemMouseContext } from './context-menu.model';
+import { ContextMenu } from './context-menu.model';
 
 @Directive({ selector: '[contextMenu]' })
 export class ContextMenuDirective {
+  readonly el = inject(ElementRef<HTMLElement>);
+
   contextMenu = input.required<FileSystemObject | null>();
 
-  menuRequested = output<FileSystemMouseContext>();
+  menuRequested = output<ContextMenu>();
   menuClosed = output<void>();
 
-  constructor(private readonly el: ElementRef<HTMLElement>) {}
-
-  /* === Clic droit : ouverture === */
   @HostListener('contextmenu', ['$event'])
   onRightClick(event: MouseEvent) {
     event.preventDefault();
@@ -20,11 +19,10 @@ export class ContextMenuDirective {
     this.menuRequested.emit({
       x: event.clientX,
       y: event.clientY,
-      data: this.contextMenu(),
+      target: this.contextMenu(),
     });
   }
 
-  /* === Clic gauche ailleurs : fermeture === */
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const clickedInside = this.el.nativeElement.contains(event.target as Node);
