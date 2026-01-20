@@ -1,6 +1,10 @@
 <section class="columns">
-  @for (col of columns; let i = $index; track i) {
-    <div class="column">
+  @for (col of columns; track $index) {
+    <div class="column"
+         [contextMenu]="null"
+         (menuRequested)="contextMenu.open($event, fileSystemHelper.findParentWithoutTarget($index, selectedObj,data))"
+         (menuClosed)="contextMenu.close()"
+    >
       <ul class="list">
         @for (item of col; track item.id) {
           <li
@@ -10,6 +14,8 @@
             [class.selected]="selectedObj === item"
             [contextMenu]="item"
             (click)="selectObj(item)"
+            (menuRequested)="contextMenu.open($event, fileSystemHelper.findParent($event.target, data))"
+            (menuClosed)="contextMenu.close()"
           >
             <mat-icon>{{ item.fileExtension ? 'insert_drive_file' : 'folder' }}</mat-icon>
             <span>{{ item.name }}</span>
@@ -20,19 +26,16 @@
   }
 </section>
 
-<!--  @if (contextMenu.state().visible) {-->
-<!--    <div-->
-<!--      class="context-menu"-->
-<!--      [style.top.px]="contextMenu.state().y"-->
-<!--      [style.left.px]="contextMenu.state().x"-->
-<!--    >-->
-<!--      <button (click)="createFolder()">Nouveau dossier</button>-->
+<!-- === Context Menu === -->
+@if (contextMenu.isOpen) {
+  <div class="context-menu" [style.top.px]="contextMenu.state().y" [style.left.px]="contextMenu.state().x">
+    <button (click)="contextMenu.createFolder(data)">New Folder</button>
 
-<!--      @if (contextMenu.state().targetFolder) {-->
-<!--        <button (click)="renameFolder()">Renommer</button>-->
-<!--        <button (click)="deleteFolder()">Supprimer</button>-->
-<!--      }-->
-<!--    </div>-->
-<!--  }-->
+    @if (contextMenu.target) {
+      <button (click)="contextMenu.rename()">Rename</button>
+      <button (click)="contextMenu.delete(data)">Delete</button>
+    }
+  </div>
+}
 
 <!--  <sb-file-drop class="drop-zone" (filesDropped)="onFilesDropped($event)" />-->

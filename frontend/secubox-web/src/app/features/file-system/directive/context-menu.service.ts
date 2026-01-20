@@ -1,12 +1,7 @@
 import { Injectable, signal } from '@angular/core';
-import { CreateFolder, FileSystemObject } from '../file-system.model';
-
-export interface ContextMenuState {
-  visible: boolean;
-  x: number;
-  y: number;
-  path: FileSystemObject | null;
-}
+import { CreateFolder } from '../file-system.factory';
+import { FileSystemObject } from '../file-system.model';
+import { ContextMenu, ContextMenuState } from './context-menu.model';
 
 @Injectable({ providedIn: 'root' })
 export class ContextMenuService {
@@ -14,68 +9,85 @@ export class ContextMenuService {
     visible: false,
     x: 0,
     y: 0,
-    path: null,
+    target: null,
+    parent: null,
   });
 
   readonly state = this._state.asReadonly();
 
-  /* === Ouverture === */
-  open(x: number, y: number, folder: FileSystemObject | null) {
+  open(evt: ContextMenu, parent: FileSystemObject | null = null) {
     this._state.set({
       visible: true,
-      x,
-      y,
-      path: folder,
+      x: evt.x,
+      y: evt.y,
+      target: evt.target ?? null,
+      parent: parent,
     });
   }
 
-  /* === Fermeture === */
   close() {
     this._state.update((s) => ({
       ...s,
       visible: false,
-      path: null,
+      target: null,
+      parent: null,
     }));
   }
 
-  /* === Helpers === */
-  get path(): FileSystemObject | null {
-    return this._state().path;
+  get target(): FileSystemObject | null {
+    return this._state().target;
+  }
+
+  get parent(): FileSystemObject | null {
+    return this._state().parent;
   }
 
   get isOpen(): boolean {
     return this._state().visible;
   }
 
-  // ###### ACTIONS ###### //
-  createFolder(parent: FileSystemObject | null) {
+  createFolder(rootData: FileSystemObject[]) {
+    const parent = this.parent;
+
     const name = prompt('Nom du nouveau dossier ?');
-    if (!name) {
-      return;
-    }
+    if (!name) return;
 
     const newFolder: FileSystemObject = new CreateFolder({
-      name: name,
-      path: `${parent?.path}/${parent?.name}`,
+      name,
+      path: parent ? (parent.path === '/' ? `/${parent.name}` : `${parent.path}/${parent.name}`) : '/',
     }).build();
-  }
 
-  rename(obj: FileSystemObject) {
-    const name = prompt('Nouveau nom ?', obj.name);
-    if (name) {
-      obj.name = name;
+    if (parent) {
+      parent.childrens = parent.childrens ?? [];
+      parent.childrens.push(newFolder);
+    } else {
+      rootData.push(newFolder);
     }
   }
 
-  // delete(obj: FileSystemObject) {
-  //   const parentIndex = obj.path.indexOf(folder) - 1;
-  //   const parent = parentIndex >= 0 ? path[parentIndex] : null;
-  //
-  //   if (parent?.children) {
-  //     parent.children = parent.children.filter((f) => f.id !== folder.id);
-  //   } else {
-  //     const idx = rootFolders.findIndex((f) => f.id === folder.id);
-  //     if (idx !== -1) rootFolders.splice(idx, 1);
-  //   }
-  // }
+  rename() {
+    const target = this.target;
+    if (!target) return;
+
+    const name = prompt('Nouveau nom ?', target.name);
+    if (name) target.name = name;
+  }
+
+  delete(rootData: FileSystemObject[]) {
+    if (!this.target) return;
+
+    const parent = this.parent;
+
+    if (parent) {
+      parent.childrens = parent.childrens?.filter((f) => f.id !== this.target?.id) ?? [];
+    } else {
+      // deleting at root level
+      const index = rootData.findIndex((f) => f.id === this.target?.id);
+      if (index !== -1) {
+        rootData.splice(index, 1);
+      }
+    }
+
+    this.close();
+  }
 }

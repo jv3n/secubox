@@ -5,17 +5,17 @@ export const mockFileSystem: FileSystemObject[] = [
     id: 'root_docs',
     name: 'Documents',
     path: '/',
-    folderChildren: [
+    childrens: [
       {
         id: 'doc_projects',
         name: 'Projets',
         path: '/Documents',
-        folderChildren: [
+        childrens: [
           {
             id: 'proj_2026',
             name: 'Projet 2026',
             path: '/Documents/Projets',
-            folderChildren: [
+            childrens: [
               {
                 id: 'report',
                 name: 'Rapport.pdf',
@@ -34,7 +34,7 @@ export const mockFileSystem: FileSystemObject[] = [
             id: 'proj_2025',
             name: 'Projet 2025',
             path: '/Documents/Projets',
-            folderChildren: [
+            childrens: [
               {
                 id: 'summary',
                 name: 'Résumé.docx',
@@ -49,12 +49,12 @@ export const mockFileSystem: FileSystemObject[] = [
         id: 'doc_personal',
         name: 'Personnel',
         path: '/Documents',
-        folderChildren: [
+        childrens: [
           {
             id: 'letters',
             name: 'Lettres',
             path: '/Documents/Personnel',
-            folderChildren: [
+            childrens: [
               {
                 id: 'letter_1',
                 name: 'Lettre_Famille.pdf',
@@ -67,7 +67,7 @@ export const mockFileSystem: FileSystemObject[] = [
             id: 'photos',
             name: 'Photos',
             path: '/Documents/Personnel',
-            folderChildren: [
+            childrens: [
               {
                 id: 'vacances_2025',
                 name: 'Vacances_2025.jpeg',
@@ -90,12 +90,12 @@ export const mockFileSystem: FileSystemObject[] = [
     id: 'root_travail',
     name: 'Travail',
     path: '/',
-    folderChildren: [
+    childrens: [
       {
         id: 'client_x',
         name: 'Client X',
         path: '/Travail',
-        folderChildren: [
+        childrens: [
           {
             id: 'contrat',
             name: 'Contrat.docx',
@@ -114,7 +114,7 @@ export const mockFileSystem: FileSystemObject[] = [
         id: 'client_y',
         name: 'Client Y',
         path: '/Travail',
-        folderChildren: [],
+        childrens: [],
       },
     ],
   },
