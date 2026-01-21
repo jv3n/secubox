@@ -22,3 +22,26 @@ export class CreateFolder {
     } satisfies FileSystemObject;
   }
 }
+
+export class CreateFile {
+  id: string;
+  name: string;
+  path: string;
+  file: File;
+
+  constructor(file: File, parent: FileSystemObject) {
+    this.id = crypto.randomUUID();
+    this.name = file.name ?? '';
+    this.path = `${parent}/${parent.name}`;
+    this.file = file;
+  }
+
+  build() {
+    return {
+      id: this.id,
+      name: this.name,
+      path: this.path,
+      file: this.file,
+    } satisfies FileSystemObject;
+  }
+}

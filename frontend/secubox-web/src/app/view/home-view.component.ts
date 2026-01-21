@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { FilePreviewComponent } from '../features/file-system/components/preview/preview.component';
 import { FileSystemComponent } from '../features/file-system/file-system.component';
+import { FileSystemObject } from '../features/file-system/file-system.model';
 
 @Component({
   selector: 'sb-home',
@@ -7,10 +9,16 @@ import { FileSystemComponent } from '../features/file-system/file-system.compone
     <main class="home">
       <h1>Secubox</h1>
 
-      <sb-file-system />
+      <sb-file-system (selected)="selectedObj = $event" />
+
+      @if (selectedObj?.file; as file) {
+        <sb-file-preview [file]="file" />
+      }
     </main>
   `,
-  imports: [FileSystemComponent],
+  imports: [FileSystemComponent, FilePreviewComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class HomeComponent {}
+export default class HomeComponent {
+  selectedObj: FileSystemObject | null = null;
+}
