@@ -9,15 +9,15 @@
         @for (item of col; track item.id) {
           <li
             class="entry"
-            [class.entry--folder]="!item.fileExtension"
-            [class.entry--file]="!!item.fileExtension"
+            [class.entry--folder]="!item.file"
+            [class.entry--file]="!!item.file"
             [class.selected]="selectedObj === item"
             [contextMenu]="item"
             (click)="selectObj(item)"
             (menuRequested)="contextMenu.open($event, fileSystemHelper.findParent($event.target, data))"
             (menuClosed)="contextMenu.close()"
           >
-            <mat-icon>{{ item.fileExtension ? 'insert_drive_file' : 'folder' }}</mat-icon>
+            <mat-icon>{{ item.file ? 'insert_drive_file' : 'folder' }}</mat-icon>
             <span>{{ item.name }}</span>
           </li>
         }
@@ -38,4 +38,4 @@
   </div>
 }
 
-<!--  <sb-file-drop class="drop-zone" (filesDropped)="onFilesDropped($event)" />-->
+  <sb-file-drop class="drop-zone" (filesDropped)="onFilesDropped($event)" />
