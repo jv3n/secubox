@@ -1,0 +1,58 @@
+// Breakpoints - Direct variables (modern Sass)
+$mobile-max: 767px;
+$tablet-min: 768px;
+$tablet-max: 1023px;
+$desktop-min: 1024px;
+$desktop-max: 1439px;
+$large-min: 1440px;
+$xlarge-min: 1920px;
+
+// Mobile-first mixins
+@mixin mobile {
+  @media (max-width: $mobile-max) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: $tablet-min) and (max-width: $tablet-max) {
+    @content;
+  }
+}
+
+@mixin tablet-and-up {
+  @media (min-width: $tablet-min) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: $desktop-min) and (max-width: $desktop-max) {
+    @content;
+  }
+}
+
+@mixin desktop-and-up {
+  @media (min-width: $desktop-min) {
+    @content;
+  }
+}
+
+@mixin large {
+  @media (min-width: $large-min) {
+    @content;
+  }
+}
+
+@mixin xlarge {
+  @media (min-width: $xlarge-min) {
+    @content;
+  }
+}
+
+// Custom breakpoint
+@mixin respond-to($breakpoint) {
+  @media (min-width: $breakpoint) {
+    @content;
+  }
+}
