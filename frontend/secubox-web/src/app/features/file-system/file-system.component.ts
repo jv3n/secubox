@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { mockFileSystem } from '../../mocks/file-system-mock.service';
-import FileDropComponent from './components/file-drop/file-drop.component';
 import { ContextMenuDirective } from './directive/context-menu.directive';
 import { ContextMenuService } from './directive/context-menu.service';
 import { CreateFile } from './file-system.factory';
@@ -12,7 +11,7 @@ import { FileSystemObject } from './file-system.model';
   selector: 'sb-file-system',
   templateUrl: `file-system.component.html`,
   styleUrl: `file-system.component.scss`,
-  imports: [MatIcon, ContextMenuDirective, FileDropComponent],
+  imports: [MatIcon, ContextMenuDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FileSystemComponent {
@@ -23,10 +22,89 @@ export class FileSystemComponent {
   selected = output<FileSystemObject>();
 
   selectedObj: FileSystemObject | null = null;
+  dragOverFolder: FileSystemObject | null = null;
+  draggedItem: FileSystemObject | null = null;
+  dragOverColumnIndex: number | null = null;
 
   selectObj(obj: FileSystemObject) {
     this.selectedObj = obj;
     this.selected.emit(obj);
+  }
+
+  onDragStart(event: DragEvent, item: FileSystemObject) {
+    this.draggedItem = item;
+    event.dataTransfer!.effectAllowed = 'move';
+  }
+
+  onDragEnd() {
+    this.draggedItem = null;
+    this.dragOverFolder = null;
+    this.dragOverColumnIndex = null;
+  }
+
+  onDragOver(event: DragEvent, folder: FileSystemObject) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Empêcher de déposer un dossier dans lui-même
+    if (this.draggedItem && this.draggedItem.id === folder.id) {
+      return;
+    }
+
+    this.dragOverFolder = folder;
+    event.dataTransfer!.dropEffect = 'move';
+  }
+
+  onDragLeave() {
+    this.dragOverFolder = null;
+  }
+
+  onDrop(event: DragEvent, targetFolder: FileSystemObject) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dragOverFolder = null;
+
+    // Cas 1: Déplacement d'un élément interne
+    if (this.draggedItem) {
+      this.moveItem(this.draggedItem, targetFolder);
+      this.draggedItem = null;
+      return;
+    }
+
+    // Cas 2: Drop de fichiers depuis l'extérieur
+    const files = Array.from(event.dataTransfer?.files ?? []);
+    if (files.length) {
+      this.onFilesDropped(files, targetFolder);
+    }
+  }
+
+  moveItem(item: FileSystemObject, targetFolder: FileSystemObject) {
+    if (item.id === targetFolder.id) {
+      return;
+    }
+
+    const sourceParent = this.fileSystemHelper.findParent(item, this.data);
+
+    // Si pas de parent, l'élément est à la racine
+    if (!sourceParent) {
+      const index = this.data.findIndex((child) => child.id === item.id);
+      if (index !== -1) {
+        this.data.splice(index, 1);
+      }
+    } else {
+      const index = sourceParent.childrens!.findIndex((child) => child.id === item.id);
+      if (index !== -1) {
+        sourceParent.childrens!.splice(index, 1);
+      }
+    }
+
+    // Si le dossier cible est la racine virtuelle
+    if (targetFolder.id === 'root') {
+      this.data.push(item);
+    } else {
+      targetFolder.childrens = targetFolder.childrens ?? [];
+      targetFolder.childrens.push(item);
+    }
   }
 
   get columns(): FileSystemObject[][] {
@@ -61,26 +139,77 @@ export class FileSystemComponent {
     return cols;
   }
 
-  onFilesDropped(files: File[]) {
-    console.log('files: ', files);
-    console.log('selected parent: ', this.selectedObj);
+  onFilesDropped(files: File[], targetFolder: FileSystemObject) {
+    targetFolder.childrens = targetFolder.childrens ?? [];
+    const newFiles = files.map((f) => new CreateFile(f, targetFolder));
+    targetFolder.childrens.push(...newFiles);
+  }
 
-    if (!this.selectedObj) {
-      return alert('Sélectionne un dossier !');
+  onColumnDragOver(event: DragEvent, columnIndex: number) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.dragOverColumnIndex = columnIndex;
+    event.dataTransfer!.dropEffect = 'move';
+  }
+
+  onColumnDragLeave() {
+    this.dragOverColumnIndex = null;
+  }
+
+  onColumnDrop(event: DragEvent, columnIndex: number) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dragOverColumnIndex = null;
+
+    const targetFolder = this.getColumnTargetFolder(columnIndex);
+    if (!targetFolder) return;
+
+    if (this.draggedItem) {
+      this.moveItem(this.draggedItem, targetFolder);
+      this.draggedItem = null;
+      return;
     }
 
-    this.selectedObj.childrens = this.selectedObj.childrens ?? [];
-
-    for (const f of this.toFileSystemObject(files, this.selectedObj)) {
-      this.selectedObj.childrens.push(f);
+    const files = Array.from(event.dataTransfer?.files ?? []);
+    if (files.length) {
+      this.onFilesDropped(files, targetFolder);
     }
   }
 
-  toFileSystemObject(files: File[], parent: FileSystemObject | null): FileSystemObject[] {
-    if (!parent) {
-      return [];
+  getColumnTargetFolder(columnIndex: number): FileSystemObject | null {
+    if (columnIndex === 0) {
+      return {
+        id: 'root',
+        name: 'Root',
+        path: '/',
+        childrens: this.data,
+      };
     }
 
-    return files.map((f) => new CreateFile(f, parent));
+    if (!this.selectedObj) return null;
+
+    let currentChildren = this.data;
+    let current: FileSystemObject | null = this.selectedObj;
+
+    const pathStack: FileSystemObject[] = [];
+    while (current) {
+      pathStack.unshift(current);
+      current = this.fileSystemHelper.findParent(current, this.data);
+    }
+
+    let index = 0;
+    for (const obj of pathStack) {
+      if (!obj.file) {
+        index++;
+        if (index === columnIndex) return obj;
+        const currentFolder = currentChildren.find((f) => f.id === obj.id);
+        currentChildren = currentFolder?.childrens ?? [];
+      } else {
+        break;
+      }
+    }
+
+    return null;
   }
 }

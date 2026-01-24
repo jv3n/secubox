@@ -25,6 +25,10 @@ export class ContextMenuDirective {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
+    if (event.button === 2) {
+      return;
+    }
+
     const clickedInside = this.el.nativeElement.contains(event.target as Node);
 
     if (!clickedInside) {

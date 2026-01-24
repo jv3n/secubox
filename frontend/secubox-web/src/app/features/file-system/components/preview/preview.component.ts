@@ -20,7 +20,6 @@ export class FilePreviewComponent {
   previewUrl = signal<string | null>(null);
 
   constructor() {
-    // convertir le fichier en DataURL dès qu'il change
     effect(() => {
       const f = this.file();
       if (f && f.type.startsWith('image/')) {

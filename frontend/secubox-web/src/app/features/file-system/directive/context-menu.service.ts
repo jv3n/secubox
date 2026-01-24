@@ -50,7 +50,10 @@ export class ContextMenuService {
     const parent = this.parent;
 
     const name = prompt('Nom du nouveau dossier ?');
-    if (!name) return;
+    if (!name) {
+      this.close();
+      return;
+    }
 
     const newFolder: FileSystemObject = new CreateFolder({
       name,
@@ -63,6 +66,8 @@ export class ContextMenuService {
     } else {
       rootData.push(newFolder);
     }
+
+    this.close();
   }
 
   rename() {
@@ -70,7 +75,11 @@ export class ContextMenuService {
     if (!target) return;
 
     const name = prompt('Nouveau nom ?', target.name);
-    if (name) target.name = name;
+    if (name) {
+      target.name = name;
+    }
+
+    this.close();
   }
 
   delete(rootData: FileSystemObject[]) {
@@ -81,7 +90,6 @@ export class ContextMenuService {
     if (parent) {
       parent.childrens = parent.childrens?.filter((f) => f.id !== this.target?.id) ?? [];
     } else {
-      // deleting at root level
       const index = rootData.findIndex((f) => f.id === this.target?.id);
       if (index !== -1) {
         rootData.splice(index, 1);

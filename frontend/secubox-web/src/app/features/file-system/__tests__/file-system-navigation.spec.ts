@@ -3,6 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { ContextMenuDirective } from '../directive/context-menu.directive';
 import { FileSystemComponent } from '../file-system.component';
 import { FileSystemObject } from '../file-system.model';
+import { testFileSystemMock } from './test-data.mock';
 
 describe('FileSystemComponent: Navigation', () => {
   let fixture: ComponentFixture<FileSystemComponent>;
@@ -15,6 +16,7 @@ describe('FileSystemComponent: Navigation', () => {
 
     fixture = TestBed.createComponent(FileSystemComponent);
     component = fixture.componentInstance;
+    component.data = testFileSystemMock;
     fixture.detectChanges();
   });
 
@@ -48,22 +50,23 @@ describe('FileSystemComponent: Navigation', () => {
   });
 
   it('should select a nested child folder and generate correct columns', () => {
-    const doc1 = component.data[0].childrens![0];
-    component.selectObj(doc1);
+    const rootFolder = component.data[0]; // Folder A
+    const subFolder = rootFolder.childrens![0]; // Subfolder A1
+    component.selectObj(subFolder);
     const cols = component.columns;
 
     expect(cols[0]).toEqual(component.data);
-    expect(cols[1]).toContain(doc1);
-    expect(cols[2]).toEqual(doc1.childrens);
+    expect(cols[1]).toContain(subFolder);
+    expect(cols[2]).toEqual(subFolder.childrens);
   });
 
   it('should stop generating columns when a file is selected', () => {
     // Create a file with file property to properly identify it as a file
-    const parent = component.data[0];
+    const parent = component.data[0]; // Folder A
     const file: FileSystemObject = {
       id: 'test_file',
       name: 'test.txt',
-      path: '/Documents',
+      path: '/Folder A',
       file: new File([], 'test.txt'),
     };
     parent.childrens!.push(file);
@@ -76,24 +79,19 @@ describe('FileSystemComponent: Navigation', () => {
   });
 
   it('should generate multiple levels correctly', () => {
-    const dossier4 = component.data[0].childrens![0].childrens![0];
-    component.selectObj(dossier4);
+    // Folder A -> Subfolder A1 -> Deep Folder A1
+    const deepFolder = component.data[0].childrens![0].childrens![0];
+    component.selectObj(deepFolder);
     const cols = component.columns;
 
     expect(cols.length).toBeGreaterThan(3);
-    expect(cols[cols.length - 1]).toEqual(dossier4.childrens);
+    expect(cols[cols.length - 1]).toEqual(deepFolder.childrens);
   });
 
   it('should select a file inside nested folder', () => {
-    // Create a proper file with file property in a nested folder
-    const parentFolder = component.data[0].childrens![0].childrens![0]; // Projet 2026
-    const file: FileSystemObject = {
-      id: 'nested_file',
-      name: 'nested.pdf',
-      path: '/Documents/Projets/Projet 2026',
-      file: new File([], 'nested.pdf'),
-    };
-    parentFolder.childrens!.push(file);
+    // Use existing deep file: Folder A -> Subfolder A1 -> Deep Folder A1 -> deep-file.txt
+    const deepFolder = component.data[0].childrens![0].childrens![0];
+    const file = deepFolder.childrens![0];
 
     component.selectObj(file);
     const cols = component.columns;
@@ -105,26 +103,26 @@ describe('FileSystemComponent: Navigation', () => {
   // === New tests ===
   it('should update child column when selecting a different folder at same level', () => {
     const level1 = component.data[0].childrens!;
-    const folderA = level1[0];
-    const folderB = level1[1];
+    const folderA1 = level1[0]; // Subfolder A1
+    const folderA2 = level1[1]; // Subfolder A2
 
-    component.selectObj(folderA);
+    component.selectObj(folderA1);
     let cols = component.columns;
-    expect(cols[2]).toEqual(folderA.childrens);
+    expect(cols[2]).toEqual(folderA1.childrens);
 
-    component.selectObj(folderB);
+    component.selectObj(folderA2);
     cols = component.columns;
-    expect(cols[2]).toEqual(folderB.childrens);
+    expect(cols[2]).toEqual(folderA2.childrens);
   });
 
   it('should show empty column for a newly created folder', () => {
-    const root = component.data[0];
+    const root = component.data[0]; // Folder A
     component.selectObj(root);
 
     const newFolder: FileSystemObject = {
       id: 'new_folder',
       name: 'New Folder',
-      path: '/Documents',
+      path: '/Folder A',
       childrens: [],
     };
     root.childrens!.push(newFolder);
@@ -136,14 +134,14 @@ describe('FileSystemComponent: Navigation', () => {
   });
 
   it('should keep selectedObj after creating a new file in selected folder', () => {
-    const folder = component.data[0].childrens![0];
+    const folder = component.data[0].childrens![0]; // Subfolder A1
     component.selectObj(folder);
 
     const newFile: FileSystemObject = {
       id: 'new_file',
       name: 'file.txt',
-      path: '/Documents/Projet A',
-      file: {} as File,
+      path: '/Folder A/Subfolder A1',
+      file: new File([], 'file.txt', { type: 'text/plain' }),
     };
     folder.childrens!.push(newFile);
 
