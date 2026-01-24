@@ -38,7 +38,7 @@ spec:
 
 k8s_resource(
     'mongodb',
-    port_forwards='27017:27017',
+    port_forwards='27018:27017',
     labels=['database']
 )
 
@@ -46,7 +46,7 @@ k8s_resource(
 docker_build(
     'secubox-api',
     context='./projects/backend/secubox-api',
-    dockerfile='./projects/backend/secubox-api/Dockerfile',
+    dockerfile='./projects/backend/secubox-api/Dockerfile.dev',
     live_update=[
         sync('./projects/backend/secubox-api/src', '/app/src'),
         run('cd /app && ./gradlew build -x test', trigger=['./projects/backend/secubox-api/src']),
@@ -90,7 +90,7 @@ spec:
 
 k8s_resource(
     'secubox-api',
-    port_forwards='8080:8080',
+    port_forwards='8081:8080',
     labels=['backend']
 )
 
@@ -98,10 +98,9 @@ k8s_resource(
 docker_build(
     'secubox-web',
     context='./projects/frontend/secubox-web',
-    dockerfile='./projects/frontend/secubox-web/Dockerfile',
+    dockerfile='./projects/frontend/secubox-web/Dockerfile.dev',
     live_update=[
         sync('./projects/frontend/secubox-web/src', '/app/src'),
-        run('cd /app && npm run build', trigger=['./projects/frontend/secubox-web/src']),
     ]
 )
 
@@ -139,7 +138,7 @@ spec:
 
 k8s_resource(
     'secubox-web',
-    port_forwards='4200:4200',
+    port_forwards='4201:4200',
     labels=['frontend']
 )
 

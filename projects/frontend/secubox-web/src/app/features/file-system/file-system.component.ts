@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
-import { mockFileSystem } from '../../mocks/file-system-mock.service';
 import { FilePreviewComponent } from './components/preview/preview.component';
 import { ContextMenuDirective } from './directive/context-menu.directive';
 import { ContextMenuService } from './directive/context-menu.service';
 import { CreateFile } from './file-system.factory';
 import { FileSystemHelper } from './file-system.helper';
 import { FileSystemObject } from './file-system.model';
+import { mockFileSystem } from '../../core/mocks/file-system-mock.service';
 
 @Component({
   selector: 'sb-file-system',

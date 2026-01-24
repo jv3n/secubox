@@ -1,6 +1,8 @@
-import { FileSystemObject } from '../features/file-system/file-system.model';
 
 // Helper pour créer un fichier mock
+
+import { FileSystemObject } from '../../features/file-system/file-system.model';
+
 const createMockFile = (name: string, type: string): File => {
   return new File([], name, { type });
 };
