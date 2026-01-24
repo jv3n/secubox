@@ -38,7 +38,7 @@ describe('FileSystemComponent: Navigation', () => {
   it('should generate empty column for a folder with no children', () => {
     const emptyFolder = component.data
       .flatMap((f) => [f, ...(f.childrens ?? [])])
-      .find((f) => !f.fileExtension && (f.childrens?.length ?? 0) === 0);
+      .find((f) => !f.file && (f.childrens?.length ?? 0) === 0);
 
     expect(emptyFolder).toBeDefined();
 
@@ -58,17 +58,21 @@ describe('FileSystemComponent: Navigation', () => {
   });
 
   it('should stop generating columns when a file is selected', () => {
-    const file = component.data.flatMap((f) => [f, ...(f.childrens ?? [])]).find((f) => !!f.fileExtension);
+    // Create a file with file property to properly identify it as a file
+    const parent = component.data[0];
+    const file: FileSystemObject = {
+      id: 'test_file',
+      name: 'test.txt',
+      path: '/Documents',
+      file: new File([], 'test.txt'),
+    };
+    parent.childrens!.push(file);
 
-    expect(file).toBeDefined();
-    component.selectObj(file!);
+    component.selectObj(file);
 
     const cols = component.columns;
+    // When selecting a file (with file property), columns should include parent's children
     expect(cols[cols.length - 1]).toContain(file);
-    // No column after file
-    if (cols.length > 1) {
-      expect(cols.slice(cols.length)).toEqual([]);
-    }
   });
 
   it('should generate multiple levels correctly', () => {
@@ -81,7 +85,16 @@ describe('FileSystemComponent: Navigation', () => {
   });
 
   it('should select a file inside nested folder', () => {
-    const file = component.data[0].childrens![0].childrens![0].childrens![0];
+    // Create a proper file with file property in a nested folder
+    const parentFolder = component.data[0].childrens![0].childrens![0]; // Projet 2026
+    const file: FileSystemObject = {
+      id: 'nested_file',
+      name: 'nested.pdf',
+      path: '/Documents/Projets/Projet 2026',
+      file: new File([], 'nested.pdf'),
+    };
+    parentFolder.childrens!.push(file);
+
     component.selectObj(file);
     const cols = component.columns;
 
@@ -130,7 +143,7 @@ describe('FileSystemComponent: Navigation', () => {
       id: 'new_file',
       name: 'file.txt',
       path: '/Documents/Projet A',
-      fileExtension: 'txt',
+      file: {} as File,
     };
     folder.childrens!.push(newFile);
 
