@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: secubox-mongodb-prod
+    environment:
+      MONGO_INITDB_DATABASE: secubox
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - secubox-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    image: j6455lienv/secubox-backend:latest
+    container_name: secubox-backend-prod
+    build:
+      context: ./projects/backend/secubox-api
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/secubox
+      SERVER_PORT: 8080
+      SPRING_PROFILES_ACTIVE: prod
+      ALLOWED_ORIGINS: http://localhost:8080,http://frontend:8080
+      FILE_STORAGE_PATH: /app/storage
+    ports:
+      - "8080:8080"
+    volumes:
+      - backend_storage:/app/storage
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - secubox-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+  # Frontend
+  frontend:
+    image: j6455lienv/secubox-frontend:latest
+    container_name: secubox-frontend-prod
+    build:
+      context: ./projects/frontend/secubox-web
+      dockerfile: Dockerfile
+    ports:
+      - "4200:8080"
+    depends_on:
+      - backend
+    networks:
+      - secubox-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+networks:
+  secubox-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  backend_storage:
