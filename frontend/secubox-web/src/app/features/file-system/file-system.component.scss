@@ -100,11 +100,32 @@
   }
 }
 
+/* === Resize Handle === */
+.resize-handle {
+  width: 4px;
+  cursor: ew-resize;
+  background: var(--mat-sys-outline-variant);
+  transition: background 0.2s;
+  position: relative;
+
+  &:hover {
+    background: var(--mat-sys-primary);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -4px;
+    right: -4px;
+    bottom: 0;
+  }
+}
+
 /* === Preview Panel === */
 .preview-panel {
-  flex: 0 0 600px;
+  flex: 0 0 auto;
   background: var(--mat-sys-surface-container-low);
-  border-left: 1px solid var(--mat-sys-outline-variant);
   overflow: auto;
 }
 

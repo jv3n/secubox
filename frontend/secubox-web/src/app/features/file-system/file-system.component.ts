@@ -27,6 +27,8 @@ export class FileSystemComponent {
   draggedItem: FileSystemObject | null = null;
   dragOverColumnIndex: number | null = null;
   selectedFile = signal<File | null>(null);
+  previewWidth = signal<number>(600);
+  isResizing = false;
 
   selectObj(obj: FileSystemObject) {
     this.selectedObj = obj;
@@ -219,5 +221,35 @@ export class FileSystemComponent {
     }
 
     return null;
+  }
+
+  onResizeStart(event: MouseEvent): void {
+    event.preventDefault();
+    this.isResizing = true;
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (this.isResizing) {
+        const containerWidth = (e.target as HTMLElement).closest('.file-system-container')?.clientWidth || 0;
+        const newWidth = containerWidth - e.clientX;
+
+        // Limites min/max
+        if (newWidth >= 300 && newWidth <= containerWidth - 400) {
+          this.previewWidth.set(newWidth);
+        }
+      }
+    };
+
+    const onMouseUp = () => {
+      this.isResizing = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    document.body.style.cursor = 'ew-resize';
+    document.body.style.userSelect = 'none';
   }
 }

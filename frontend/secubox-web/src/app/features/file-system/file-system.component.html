@@ -40,7 +40,9 @@
     }
   </section>
 
-  <aside class="preview-panel">
+  <div class="resize-handle" (mousedown)="onResizeStart($event)"></div>
+
+  <aside class="preview-panel" [style.width.px]="previewWidth()">
     @if (selectedFile()) {
       <sb-file-preview [file]="selectedFile()!" />
     } @else {
