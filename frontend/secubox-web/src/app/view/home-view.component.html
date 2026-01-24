@@ -1,0 +1,29 @@
+<div class="home">
+  <aside class="sidebar" [class.collapsed]="isMenuCollapsed()">
+    <div class="sidebar-header">
+      <button mat-icon-button (click)="toggleMenu()" class="toggle-btn">
+        <mat-icon>{{ isMenuCollapsed() ? 'menu' : 'menu_open' }}</mat-icon>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item active" matTooltip="My Files" [matTooltipDisabled]="!isMenuCollapsed()">
+        <mat-icon>folder</mat-icon>
+        @if (!isMenuCollapsed()) {
+          <span>My Files</span>
+        }
+      </a>
+
+      <a class="nav-item" matTooltip="Settings" [matTooltipDisabled]="!isMenuCollapsed()">
+        <mat-icon>settings</mat-icon>
+        @if (!isMenuCollapsed()) {
+          <span>Settings</span>
+        }
+      </a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <sb-file-system />
+  </main>
+</div>
