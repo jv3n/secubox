@@ -1,4 +1,4 @@
-package com.secubox.api.config
+package com.secubox.api.infrastructure.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 

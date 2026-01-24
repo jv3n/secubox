@@ -4,7 +4,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://localhost:27017/secubox
+      uri: mongodb://localhost:27018/secubox
       auto-index-creation: true
 
   webflux:

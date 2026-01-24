@@ -57,6 +57,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:1.20.4")
     testImplementation("org.testcontainers:mongodb:1.20.4")
     testImplementation("org.testcontainers:junit-jupiter:1.20.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks.withType<KotlinCompile> {
@@ -74,4 +75,10 @@ kapt {
     arguments {
         arg("mapstruct.defaultComponentModel", "spring")
     }
+    useBuildCache = false
+}
+
+// Force kapt to use the Java toolchain
+tasks.withType<org.jetbrains.kotlin.gradle.internal.KaptGenerateStubsTask>().configureEach {
+    kotlinOptions.jvmTarget = "21"
 }
