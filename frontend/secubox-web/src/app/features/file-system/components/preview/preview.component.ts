@@ -56,18 +56,19 @@ type FileType = 'image' | 'pdf' | 'text' | 'unknown';
       }
 
       .file-info {
-        border-bottom: 1px solid #e0e0e0;
+        border-bottom: 1px solid var(--mat-sys-outline-variant);
         padding-bottom: 0.5rem;
       }
 
       .file-info h3 {
         margin: 0 0 0.5rem 0;
         font-size: 1.2rem;
+        color: var(--mat-sys-on-surface);
       }
 
       .file-info p {
         margin: 0;
-        color: #666;
+        color: var(--mat-sys-on-surface-variant);
         font-size: 0.9rem;
       }
 
@@ -77,6 +78,8 @@ type FileType = 'image' | 'pdf' | 'text' | 'unknown';
         align-items: center;
         justify-content: center;
         overflow: auto;
+        background-color: var(--mat-sys-surface-dim);
+        border-radius: 8px;
       }
 
       .image-viewer img {
@@ -94,13 +97,15 @@ type FileType = 'image' | 'pdf' | 'text' | 'unknown';
         width: 100%;
         height: 100%;
         min-height: 600px;
+        border-radius: 8px;
       }
 
       .text-viewer {
         flex: 1;
         overflow: auto;
-        background-color: #f5f5f5;
-        border-radius: 4px;
+        background-color: var(--mat-sys-surface-container-highest);
+        border-radius: 8px;
+        border: 1px solid var(--mat-sys-outline-variant);
       }
 
       .text-viewer pre {
@@ -110,6 +115,7 @@ type FileType = 'image' | 'pdf' | 'text' | 'unknown';
         font-size: 0.9rem;
         white-space: pre-wrap;
         word-wrap: break-word;
+        color: var(--mat-sys-on-surface);
       }
 
       .unsupported {
@@ -118,7 +124,7 @@ type FileType = 'image' | 'pdf' | 'text' | 'unknown';
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        color: #666;
+        color: var(--mat-sys-on-surface-variant);
         text-align: center;
         padding: 2rem;
       }

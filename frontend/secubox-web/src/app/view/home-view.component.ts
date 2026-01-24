@@ -7,8 +7,6 @@ import { FileSystemObject } from '../features/file-system/file-system.model';
   selector: 'sb-home',
   template: `
     <main class="home">
-      <h1>Secubox</h1>
-
       <sb-file-system (selected)="selectedObj = $event" />
 
       @if (selectedObj?.file; as file) {
