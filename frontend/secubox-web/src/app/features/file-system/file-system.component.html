@@ -1,43 +1,55 @@
-<section class="columns">
-  @for (col of columns; track $index) {
-    <div
-      class="column"
-      [class.drag-over-column]="dragOverColumnIndex === $index"
-      [contextMenu]="null"
-      (menuRequested)="contextMenu.open($event, fileSystemHelper.findParentWithoutTarget($index, selectedObj, data))"
-      (menuClosed)="contextMenu.close()"
-      (dragover)="onColumnDragOver($event, $index)"
-      (dragleave)="onColumnDragLeave()"
-      (drop)="onColumnDrop($event, $index)"
-    >
-      <ul class="list">
-        @for (item of col; track item.id) {
-          <li
-            class="entry"
-            [class.entry--folder]="!item.file"
-            [class.entry--file]="!!item.file"
-            [class.selected]="selectedObj === item"
-            [class.drag-over]="!item.file && dragOverFolder === item"
-            [class.dragging]="draggedItem === item"
-            [contextMenu]="item"
-            draggable="true"
-            (click)="selectObj(item)"
-            (menuRequested)="contextMenu.open($event, fileSystemHelper.findParent(item, data))"
-            (menuClosed)="contextMenu.close()"
-            (dragstart)="onDragStart($event, item)"
-            (dragend)="onDragEnd()"
-            (dragover)="!item.file && onDragOver($event, item)"
-            (dragleave)="!item.file && onDragLeave()"
-            (drop)="!item.file && onDrop($event, item)"
-          >
-            <mat-icon>{{ item.file ? 'insert_drive_file' : 'folder' }}</mat-icon>
-            <span>{{ item.name }}</span>
-          </li>
-        }
-      </ul>
-    </div>
-  }
-</section>
+<div class="file-system-container">
+  <section class="columns">
+    @for (col of columns; track $index) {
+      <div
+        class="column"
+        [class.drag-over-column]="dragOverColumnIndex === $index"
+        [contextMenu]="null"
+        (menuRequested)="contextMenu.open($event, fileSystemHelper.findParentWithoutTarget($index, selectedObj, data))"
+        (menuClosed)="contextMenu.close()"
+        (dragover)="onColumnDragOver($event, $index)"
+        (dragleave)="onColumnDragLeave()"
+        (drop)="onColumnDrop($event, $index)"
+      >
+        <ul class="list">
+          @for (item of col; track item.id) {
+            <li
+              class="entry"
+              [class.entry--folder]="!item.file"
+              [class.entry--file]="!!item.file"
+              [class.selected]="selectedObj === item"
+              [class.drag-over]="!item.file && dragOverFolder === item"
+              [class.dragging]="draggedItem === item"
+              [contextMenu]="item"
+              draggable="true"
+              (click)="selectObj(item)"
+              (menuRequested)="contextMenu.open($event, fileSystemHelper.findParent(item, data))"
+              (menuClosed)="contextMenu.close()"
+              (dragstart)="onDragStart($event, item)"
+              (dragend)="onDragEnd()"
+              (dragover)="!item.file && onDragOver($event, item)"
+              (dragleave)="!item.file && onDragLeave()"
+              (drop)="!item.file && onDrop($event, item)"
+            >
+              <mat-icon>{{ item.file ? 'insert_drive_file' : 'folder' }}</mat-icon>
+              <span>{{ item.name }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </section>
+
+  <aside class="preview-panel">
+    @if (selectedFile()) {
+      <sb-file-preview [file]="selectedFile()!" />
+    } @else {
+      <div class="preview-empty">
+        <p>Sélectionnez un fichier pour afficher l'aperçu</p>
+      </div>
+    }
+  </aside>
+</div>
 
 <!-- === Context Menu === -->
 @if (contextMenu.isOpen) {

@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { mockFileSystem } from '../../mocks/file-system-mock.service';
+import { FilePreviewComponent } from './components/preview/preview.component';
 import { ContextMenuDirective } from './directive/context-menu.directive';
 import { ContextMenuService } from './directive/context-menu.service';
 import { CreateFile } from './file-system.factory';
@@ -11,7 +12,7 @@ import { FileSystemObject } from './file-system.model';
   selector: 'sb-file-system',
   templateUrl: `file-system.component.html`,
   styleUrl: `file-system.component.scss`,
-  imports: [MatIcon, ContextMenuDirective],
+  imports: [MatIcon, ContextMenuDirective, FilePreviewComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FileSystemComponent {
@@ -25,10 +26,17 @@ export class FileSystemComponent {
   dragOverFolder: FileSystemObject | null = null;
   draggedItem: FileSystemObject | null = null;
   dragOverColumnIndex: number | null = null;
+  selectedFile = signal<File | null>(null);
 
   selectObj(obj: FileSystemObject) {
     this.selectedObj = obj;
     this.selected.emit(obj);
+
+    if (obj.file) {
+      this.selectedFile.set(obj.file);
+    } else {
+      this.selectedFile.set(null);
+    }
   }
 
   onDragStart(event: DragEvent, item: FileSystemObject) {
