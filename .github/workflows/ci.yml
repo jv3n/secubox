@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: projects/frontend/secubox-web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: projects/frontend/secubox-web
+        run: npm ci
+
+      - name: Build
+        working-directory: projects/frontend/secubox-web
+        run: npm run build
+
+      - name: Run tests
+        working-directory: projects/frontend/secubox-web
+        run: npm test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-results
+          path: projects/frontend/secubox-web/coverage/
+          retention-days: 7
+
+  backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        working-directory: projects/backend/secubox-api
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        working-directory: projects/backend/secubox-api
+        run: ./gradlew build
+
+      - name: Run tests
+        working-directory: projects/backend/secubox-api
+        run: ./gradlew test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: projects/backend/secubox-api/build/reports/tests/
+          retention-days: 7
