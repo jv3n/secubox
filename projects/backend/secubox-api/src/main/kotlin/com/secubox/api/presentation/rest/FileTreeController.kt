@@ -2,6 +2,7 @@ package com.secubox.api.presentation.rest
 
 import com.secubox.api.application.filetree.FileTreeApplicationService
 import com.secubox.api.application.filetree.dto.FileTreeDTO
+import com.secubox.api.presentation.rest.dto.TreeUpdateCommand
 import kotlinx.coroutines.flow.Flow
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -12,15 +13,27 @@ import org.springframework.web.bind.annotation.*
  * Exposes HTTP endpoints for file tree operations
  */
 @RestController
-@RequestMapping("/api/file-tree")
+@RequestMapping("/file-tree")
+@CrossOrigin(origins = ["http://localhost:4200", "http://localhost:4201"])
 class FileTreeController(
     private val fileTreeApplicationService: FileTreeApplicationService
 ) {
+
+    @GetMapping
+    fun getAllTrees(): Flow<FileTreeDTO> {
+        return fileTreeApplicationService.getAllTrees()
+    }
 
     @GetMapping("/root")
     suspend fun getRootTree(): ResponseEntity<FileTreeDTO> {
         val rootTree = fileTreeApplicationService.getRootTree()
         return ResponseEntity.ok(rootTree)
+    }
+
+    @PutMapping("/root")
+    suspend fun updateRootTree(@RequestBody command: TreeUpdateCommand): ResponseEntity<FileTreeDTO> {
+        val updated = fileTreeApplicationService.updateRootTree(command)
+        return ResponseEntity.ok(updated)
     }
 
     @PostMapping
@@ -36,17 +49,12 @@ class FileTreeController(
             ?: ResponseEntity.notFound().build()
     }
 
-    @GetMapping
-    fun getAllTrees(): Flow<FileTreeDTO> {
-        return fileTreeApplicationService.getAllTrees()
-    }
-
     @PutMapping("/{id}")
     suspend fun updateTree(
         @PathVariable id: String,
-        @RequestBody dto: FileTreeDTO
+        @RequestBody command: TreeUpdateCommand
     ): ResponseEntity<FileTreeDTO> {
-        val updated = fileTreeApplicationService.updateTree(id, dto)
+        val updated = fileTreeApplicationService.updateTree(id, command)
         return updated?.let { ResponseEntity.ok(it) }
             ?: ResponseEntity.notFound().build()
     }

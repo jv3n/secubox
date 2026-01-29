@@ -3,6 +3,7 @@ package com.secubox.api.presentation.rest
 import com.secubox.api.application.filetree.dto.FileTreeDTO
 import com.secubox.api.domain.filetree.model.NodeType
 import com.secubox.api.infrastructure.persistence.FileTreeMongoRepository
+import com.secubox.api.presentation.rest.dto.TreeUpdateCommand
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -62,7 +63,7 @@ class FileTreeControllerIT {
         )
 
         webTestClient.post()
-            .uri("/api/file-tree")
+            .uri("/file-tree")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(fileTreeDTO)
             .exchange()
@@ -78,7 +79,7 @@ class FileTreeControllerIT {
     fun `should get root tree`() {
         // When: getting root tree (creates default if doesn't exist)
         webTestClient.get()
-            .uri("/api/file-tree/root")
+            .uri("/file-tree/root")
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -96,7 +97,7 @@ class FileTreeControllerIT {
         )
 
         val createdId = webTestClient.post()
-            .uri("/api/file-tree")
+            .uri("/file-tree")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(fileTreeDTO)
             .exchange()
@@ -108,7 +109,7 @@ class FileTreeControllerIT {
 
         // When: getting by ID
         webTestClient.get()
-            .uri("/api/file-tree/$createdId")
+            .uri("/file-tree/$createdId")
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -119,7 +120,7 @@ class FileTreeControllerIT {
     @Test
     fun `should return 404 when tree not found by id`() {
         webTestClient.get()
-            .uri("/api/file-tree/nonexistent-id")
+            .uri("/file-tree/nonexistent-id")
             .exchange()
             .expectStatus().isNotFound
     }
@@ -130,13 +131,13 @@ class FileTreeControllerIT {
         val tree1 = FileTreeDTO(name = "folder1", type = NodeType.FOLDER)
         val tree2 = FileTreeDTO(name = "folder2", type = NodeType.FOLDER)
 
-        webTestClient.post().uri("/api/file-tree")
+        webTestClient.post().uri("/file-tree")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(tree1)
             .exchange()
             .expectStatus().isCreated
 
-        webTestClient.post().uri("/api/file-tree")
+        webTestClient.post().uri("/file-tree")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(tree2)
             .exchange()
@@ -144,7 +145,7 @@ class FileTreeControllerIT {
 
         // When: getting all trees
         webTestClient.get()
-            .uri("/api/file-tree")
+            .uri("/file-tree")
             .exchange()
             .expectStatus().isOk
             .expectBodyList(FileTreeDTO::class.java)
@@ -160,7 +161,7 @@ class FileTreeControllerIT {
         )
 
         val createdId = webTestClient.post()
-            .uri("/api/file-tree")
+            .uri("/file-tree")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(originalTree)
             .exchange()
@@ -171,15 +172,16 @@ class FileTreeControllerIT {
             .id
 
         // When: updating the tree
-        val updatedTree = FileTreeDTO(
+        val updateCommand = TreeUpdateCommand(
+            id = createdId!!,
             name = "updated-name",
-            type = NodeType.FOLDER
+            path = "/updated-name"
         )
 
         webTestClient.put()
-            .uri("/api/file-tree/$createdId")
+            .uri("/file-tree/$createdId")
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(updatedTree)
+            .bodyValue(updateCommand)
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -189,15 +191,16 @@ class FileTreeControllerIT {
 
     @Test
     fun `should return 404 when updating nonexistent tree`() {
-        val updatedTree = FileTreeDTO(
+        val updateCommand = TreeUpdateCommand(
+            id = "nonexistent-id",
             name = "updated-name",
-            type = NodeType.FOLDER
+            path = "/updated-name"
         )
 
         webTestClient.put()
-            .uri("/api/file-tree/nonexistent-id")
+            .uri("/file-tree/nonexistent-id")
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(updatedTree)
+            .bodyValue(updateCommand)
             .exchange()
             .expectStatus().isNotFound
     }
@@ -211,7 +214,7 @@ class FileTreeControllerIT {
         )
 
         val createdId = webTestClient.post()
-            .uri("/api/file-tree")
+            .uri("/file-tree")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(fileTreeDTO)
             .exchange()
@@ -223,13 +226,13 @@ class FileTreeControllerIT {
 
         // When: deleting the tree
         webTestClient.delete()
-            .uri("/api/file-tree/$createdId")
+            .uri("/file-tree/$createdId")
             .exchange()
             .expectStatus().isNoContent
 
         // Then: tree should not exist anymore
         webTestClient.get()
-            .uri("/api/file-tree/$createdId")
+            .uri("/file-tree/$createdId")
             .exchange()
             .expectStatus().isNotFound
     }
@@ -237,7 +240,7 @@ class FileTreeControllerIT {
     @Test
     fun `should return 404 when deleting nonexistent tree`() {
         webTestClient.delete()
-            .uri("/api/file-tree/nonexistent-id")
+            .uri("/file-tree/nonexistent-id")
             .exchange()
             .expectStatus().isNotFound
     }

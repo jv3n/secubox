@@ -76,9 +76,7 @@ kapt {
         arg("mapstruct.defaultComponentModel", "spring")
     }
     useBuildCache = false
-}
-
-// Force kapt to use the Java toolchain
-tasks.withType<org.jetbrains.kotlin.gradle.internal.KaptGenerateStubsTask>().configureEach {
-    kotlinOptions.jvmTarget = "21"
+    javacOptions {
+        option("--release", "21")
+    }
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, output, signal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { FilePreviewComponent } from './components/preview/preview.component';
 import { ContextMenuDirective } from './directive/context-menu.directive';
@@ -7,18 +7,35 @@ import { CreateFile } from './file-system.factory';
 import { FileSystemHelper } from './file-system.helper';
 import { FileSystemObject } from './file-system.model';
 import { mockFileSystem } from '../../core/mocks/file-system-mock.service';
+import { FileSystemComponentStore, FileSystemComponentStoreProviders } from './file-system.component-store';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'sb-file-system',
   templateUrl: `file-system.component.html`,
   styleUrl: `file-system.component.scss`,
   imports: [MatIcon, ContextMenuDirective, FilePreviewComponent],
+  providers: [...FileSystemComponentStoreProviders],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FileSystemComponent {
   readonly contextMenu = inject(ContextMenuService);
+  readonly store = inject(FileSystemComponentStore);
   readonly fileSystemHelper = inject(FileSystemHelper);
-  data = mockFileSystem;
+
+  data: FileSystemObject[] = mockFileSystem;
+
+  constructor() {
+    this.store.loadRootTree();
+
+    toObservable(this.store.tree)
+      .pipe(takeUntilDestroyed())
+      .subscribe((tree) => {
+        if (tree?.childrens) {
+          this.data = tree.childrens;
+        }
+      });
+  }
 
   selected = output<FileSystemObject>();
 
@@ -115,6 +132,9 @@ export class FileSystemComponent {
       targetFolder.childrens = targetFolder.childrens ?? [];
       targetFolder.childrens.push(item);
     }
+
+    // Appel API pour mise à jour du tree
+    this.store.update({ id: 'root', name: 'Root', path: '/', childrens: this.data });
   }
 
   get columns(): FileSystemObject[][] {
@@ -153,6 +173,9 @@ export class FileSystemComponent {
     targetFolder.childrens = targetFolder.childrens ?? [];
     const newFiles = files.map((f) => new CreateFile(f, targetFolder));
     targetFolder.childrens.push(...newFiles);
+
+    // Appel API pour mise à jour du tree
+    this.store.update({ id: 'root', name: 'Root', path: '/', childrens: this.data });
   }
 
   onColumnDragOver(event: DragEvent, columnIndex: number) {
