@@ -45,6 +45,7 @@ export class FileSystemComponent {
   selectedFile = signal<File | null>(null);
   previewWidth = signal<number>(600);
   isResizing = false;
+  isPreviewCollapsed = signal<boolean>(true);
 
   selectObj(obj: TreeObject) {
     this.selectedObj = obj;
@@ -274,5 +275,9 @@ export class FileSystemComponent {
     document.addEventListener('mouseup', onMouseUp);
     document.body.style.cursor = 'ew-resize';
     document.body.style.userSelect = 'none';
+  }
+
+  togglePreview(): void {
+    this.isPreviewCollapsed.set(!this.isPreviewCollapsed());
   }
 }

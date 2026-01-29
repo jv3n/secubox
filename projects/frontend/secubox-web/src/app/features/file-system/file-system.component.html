@@ -42,15 +42,31 @@
     }
   </section>
 
-  <div class="resize-handle" (mousedown)="onResizeStart($event)"></div>
+  @if (!isPreviewCollapsed()) {
+    <div class="resize-handle" (mousedown)="onResizeStart($event)"></div>
+  }
 
-  <aside class="preview-panel" [style.width.px]="previewWidth()">
-    @if (selectedFile()) {
-      <sb-file-preview [file]="selectedFile()!" />
-    } @else {
-      <div class="preview-empty">
-        <p>Sélectionnez un fichier pour afficher l'aperçu</p>
-      </div>
+  <aside
+    class="preview-panel"
+    [class.collapsed]="isPreviewCollapsed()"
+    [style.width.px]="isPreviewCollapsed() ? 48 : previewWidth()"
+  >
+    <button
+      class="toggle-preview"
+      (click)="togglePreview()"
+      [title]="isPreviewCollapsed() ? 'Ouvrir l\'aperçu' : 'Fermer l\'aperçu'"
+    >
+      <mat-icon>{{ isPreviewCollapsed() ? 'chevron_left' : 'chevron_right' }}</mat-icon>
+    </button>
+
+    @if (!isPreviewCollapsed()) {
+      @if (selectedFile()) {
+        <sb-file-preview [file]="selectedFile()!" />
+      } @else {
+        <div class="preview-empty">
+          <p>Sélectionnez un fichier pour afficher l'aperçu</p>
+        </div>
+      }
     }
   </aside>
 </div>
