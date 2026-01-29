@@ -1,14 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MatIcon } from '@angular/material/icon';
 import { FilePreviewComponent } from './components/preview/preview.component';
 import { ContextMenuDirective } from './directive/context-menu.directive';
 import { ContextMenuService } from './directive/context-menu.service';
+import { FileSystemComponentStore, FileSystemComponentStoreProviders } from './file-system.component-store';
 import { CreateFile } from './file-system.factory';
 import { FileSystemHelper } from './file-system.helper';
-import { FileSystemObject } from './file-system.model';
-import { mockFileSystem } from '../../core/mocks/file-system-mock.service';
-import { FileSystemComponentStore, FileSystemComponentStoreProviders } from './file-system.component-store';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { Tree, TreeObject, TreeObjectType } from './file-system.model';
 
 @Component({
   selector: 'sb-file-system',
@@ -23,31 +22,31 @@ export class FileSystemComponent {
   readonly store = inject(FileSystemComponentStore);
   readonly fileSystemHelper = inject(FileSystemHelper);
 
-  data: FileSystemObject[] = mockFileSystem;
+  treeId!: string;
+  tree = signal<TreeObject[]>([]);
 
   constructor() {
-    this.store.loadRootTree();
+    this.store.load('697aabb8e08e50243d9dfe9c'); // id premier utilisateur de test, plus tard gestion de token connexion et recup du tree du user
 
     toObservable(this.store.tree)
       .pipe(takeUntilDestroyed())
-      .subscribe((tree) => {
-        if (tree?.childrens) {
-          this.data = tree.childrens;
-        }
+      .subscribe((tree: Tree) => {
+        this.treeId = tree.id;
+        this.tree.set(tree.tree);
       });
   }
 
-  selected = output<FileSystemObject>();
+  selected = output<TreeObject>();
 
-  selectedObj: FileSystemObject | null = null;
-  dragOverFolder: FileSystemObject | null = null;
-  draggedItem: FileSystemObject | null = null;
+  selectedObj: TreeObject | null = null;
+  dragOverFolder: TreeObject | null = null;
+  draggedItem: TreeObject | null = null;
   dragOverColumnIndex: number | null = null;
   selectedFile = signal<File | null>(null);
   previewWidth = signal<number>(600);
   isResizing = false;
 
-  selectObj(obj: FileSystemObject) {
+  selectObj(obj: TreeObject) {
     this.selectedObj = obj;
     this.selected.emit(obj);
 
@@ -58,7 +57,7 @@ export class FileSystemComponent {
     }
   }
 
-  onDragStart(event: DragEvent, item: FileSystemObject) {
+  onDragStart(event: DragEvent, item: TreeObject) {
     this.draggedItem = item;
     event.dataTransfer!.effectAllowed = 'move';
   }
@@ -69,11 +68,10 @@ export class FileSystemComponent {
     this.dragOverColumnIndex = null;
   }
 
-  onDragOver(event: DragEvent, folder: FileSystemObject) {
+  onDragOver(event: DragEvent, folder: TreeObject) {
     event.preventDefault();
     event.stopPropagation();
 
-    // Empêcher de déposer un dossier dans lui-même
     if (this.draggedItem && this.draggedItem.id === folder.id) {
       return;
     }
@@ -86,12 +84,11 @@ export class FileSystemComponent {
     this.dragOverFolder = null;
   }
 
-  onDrop(event: DragEvent, targetFolder: FileSystemObject) {
+  onDrop(event: DragEvent, targetFolder: TreeObject) {
     event.preventDefault();
     event.stopPropagation();
     this.dragOverFolder = null;
 
-    // Cas 1: Déplacement d'un élément interne
     if (this.draggedItem) {
       this.moveItem(this.draggedItem, targetFolder);
       this.draggedItem = null;
@@ -105,60 +102,59 @@ export class FileSystemComponent {
     }
   }
 
-  moveItem(item: FileSystemObject, targetFolder: FileSystemObject) {
+  moveItem(item: TreeObject, targetFolder: TreeObject) {
     if (item.id === targetFolder.id) {
       return;
     }
 
-    const sourceParent = this.fileSystemHelper.findParent(item, this.data);
+    const sourceParent = this.fileSystemHelper.findParent(item, this.tree());
 
     // Si pas de parent, l'élément est à la racine
     if (!sourceParent) {
-      const index = this.data.findIndex((child) => child.id === item.id);
+      const index = this.tree().findIndex((child) => child.id === item.id);
       if (index !== -1) {
-        this.data.splice(index, 1);
+        this.tree().splice(index, 1);
       }
     } else {
-      const index = sourceParent.childrens!.findIndex((child) => child.id === item.id);
+      const index = sourceParent.children!.findIndex((child) => child.id === item.id);
       if (index !== -1) {
-        sourceParent.childrens!.splice(index, 1);
+        sourceParent.children!.splice(index, 1);
       }
     }
 
     // Si le dossier cible est la racine virtuelle
     if (targetFolder.id === 'root') {
-      this.data.push(item);
+      this.tree().push(item);
     } else {
-      targetFolder.childrens = targetFolder.childrens ?? [];
-      targetFolder.childrens.push(item);
+      targetFolder.children = targetFolder.children ?? [];
+      targetFolder.children.push(item);
     }
 
-    // Appel API pour mise à jour du tree
-    this.store.update({ id: 'root', name: 'Root', path: '/', childrens: this.data });
+    this.updateTree();
   }
 
-  get columns(): FileSystemObject[][] {
-    const cols: FileSystemObject[][] = [];
+  get columns(): TreeObject[][] {
+    const cols: TreeObject[][] = [];
 
-    cols.push(this.data);
+    cols.push(this.tree());
 
     if (!this.selectedObj) {
       return cols;
     }
 
-    let currentChildren = this.data;
-    let current: FileSystemObject | null = this.selectedObj;
+    let currentChildren = this.tree();
+    let current: TreeObject | null = this.selectedObj;
 
-    const pathStack: FileSystemObject[] = [];
+    const pathStack: TreeObject[] = [];
     while (current) {
       pathStack.unshift(current);
-      current = this.fileSystemHelper.findParent(current, this.data);
+      current = this.fileSystemHelper.findParent(current, this.tree());
     }
 
     for (const obj of pathStack) {
       if (!obj.file) {
         const currentFolder = currentChildren.find((f) => f.id === obj.id);
-        const children = currentFolder?.childrens ?? [];
+        const children = currentFolder?.children ?? [];
         cols.push(children);
         currentChildren = children;
       } else {
@@ -169,13 +165,16 @@ export class FileSystemComponent {
     return cols;
   }
 
-  onFilesDropped(files: File[], targetFolder: FileSystemObject) {
-    targetFolder.childrens = targetFolder.childrens ?? [];
+  onFilesDropped(files: File[], targetFolder: TreeObject) {
+    targetFolder.children = targetFolder.children ?? [];
     const newFiles = files.map((f) => new CreateFile(f, targetFolder));
-    targetFolder.childrens.push(...newFiles);
+    targetFolder.children.push(...newFiles);
 
-    // Appel API pour mise à jour du tree
-    this.store.update({ id: 'root', name: 'Root', path: '/', childrens: this.data });
+    this.updateTree();
+  }
+
+  private updateTree() {
+    this.store.update({ id: this.treeId, tree: this.tree() });
   }
 
   onColumnDragOver(event: DragEvent, columnIndex: number) {
@@ -210,25 +209,26 @@ export class FileSystemComponent {
     }
   }
 
-  getColumnTargetFolder(columnIndex: number): FileSystemObject | null {
+  getColumnTargetFolder(columnIndex: number): TreeObject | null {
     if (columnIndex === 0) {
       return {
         id: 'root',
+        type: TreeObjectType.FOLDER,
         name: 'Root',
         path: '/',
-        childrens: this.data,
+        children: this.tree(),
       };
     }
 
     if (!this.selectedObj) return null;
 
-    let currentChildren = this.data;
-    let current: FileSystemObject | null = this.selectedObj;
+    let currentChildren = this.tree();
+    let current: TreeObject | null = this.selectedObj;
 
-    const pathStack: FileSystemObject[] = [];
+    const pathStack: TreeObject[] = [];
     while (current) {
       pathStack.unshift(current);
-      current = this.fileSystemHelper.findParent(current, this.data);
+      current = this.fileSystemHelper.findParent(current, this.tree());
     }
 
     let index = 0;
@@ -237,7 +237,7 @@ export class FileSystemComponent {
         index++;
         if (index === columnIndex) return obj;
         const currentFolder = currentChildren.find((f) => f.id === obj.id);
-        currentChildren = currentFolder?.childrens ?? [];
+        currentChildren = currentFolder?.children ?? [];
       } else {
         break;
       }

@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ContextMenuDirective } from '../directive/context-menu.directive';
-import { FileSystemObject } from '../file-system.model';
+import { TreeObject, TreeObjectType } from '../file-system.model';
 
 @Component({
   template: `
@@ -13,11 +13,12 @@ import { FileSystemObject } from '../file-system.model';
   imports: [ContextMenuDirective],
 })
 class TestHostComponent {
-  file: FileSystemObject = {
+  file: TreeObject = {
     id: '1',
+    type: TreeObjectType.FOLDER,
     name: 'Documents',
     path: '/',
-    childrens: [],
+    children: [],
   };
 
   menuRequestedSpy = vi.fn();

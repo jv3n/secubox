@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm") version "2.1.0"
     kotlin("plugin.spring") version "2.1.0"
     kotlin("kapt") version "2.1.0"
+    id("com.diffplug.spotless") version "6.25.0"
 }
 
 group = "com.secubox"
@@ -78,5 +79,16 @@ kapt {
     useBuildCache = false
     javacOptions {
         option("--release", "21")
+    }
+}
+
+spotless {
+    kotlin {
+        target("src/**/*.kt")
+        ktlint("1.5.0")
+    }
+    kotlinGradle {
+        target("*.gradle.kts")
+        ktlint("1.5.0")
     }
 }

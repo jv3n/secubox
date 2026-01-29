@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { CreateFolder } from '../file-system.factory';
-import { FileSystemObject } from '../file-system.model';
+import { TreeObject } from '../file-system.model';
 import { ContextMenu, ContextMenuState } from './context-menu.model';
 
 @Injectable({ providedIn: 'root' })
@@ -15,7 +15,7 @@ export class ContextMenuService {
 
   readonly state = this._state.asReadonly();
 
-  open(evt: ContextMenu, parent: FileSystemObject | null = null) {
+  open(evt: ContextMenu, parent: TreeObject | null = null) {
     this._state.set({
       visible: true,
       x: evt.x,
@@ -34,11 +34,11 @@ export class ContextMenuService {
     }));
   }
 
-  get target(): FileSystemObject | null {
+  get target(): TreeObject | null {
     return this._state().target;
   }
 
-  get parent(): FileSystemObject | null {
+  get parent(): TreeObject | null {
     return this._state().parent;
   }
 
@@ -46,7 +46,7 @@ export class ContextMenuService {
     return this._state().visible;
   }
 
-  createFolder(rootData: FileSystemObject[]) {
+  createFolder(rootData: TreeObject[]) {
     const parent = this.parent;
 
     const name = prompt('Nom du nouveau dossier ?');
@@ -55,14 +55,14 @@ export class ContextMenuService {
       return;
     }
 
-    const newFolder: FileSystemObject = new CreateFolder({
+    const newFolder: TreeObject = new CreateFolder({
       name,
       path: parent ? (parent.path === '/' ? `/${parent.name}` : `${parent.path}/${parent.name}`) : '/',
     }).build();
 
     if (parent) {
-      parent.childrens = parent.childrens ?? [];
-      parent.childrens.push(newFolder);
+      parent.children = parent.children ?? [];
+      parent.children.push(newFolder);
     } else {
       rootData.push(newFolder);
     }
@@ -82,13 +82,13 @@ export class ContextMenuService {
     this.close();
   }
 
-  delete(rootData: FileSystemObject[]) {
+  delete(rootData: TreeObject[]) {
     if (!this.target) return;
 
     const parent = this.parent;
 
     if (parent) {
-      parent.childrens = parent.childrens?.filter((f) => f.id !== this.target?.id) ?? [];
+      parent.children = parent.children?.filter((f) => f.id !== this.target?.id) ?? [];
     } else {
       const index = rootData.findIndex((f) => f.id === this.target?.id);
       if (index !== -1) {

@@ -16,32 +16,36 @@ import org.springframework.stereotype.Repository
  */
 @Repository
 class FileTreeRepositoryImpl(
-    private val mongoRepository: FileTreeMongoRepository
+    private val mongoRepository: FileTreeMongoRepository,
 ) : FileTreeRepository {
-
-    override suspend fun save(fileTree: FileTree): FileTree {
-        val document = FileTreeDocument.fromDomain(fileTree)
+    override suspend fun saveForUser(
+        userId: String,
+        fileTrees: List<FileTree>,
+        documentId: String?,
+    ): List<FileTree> {
+        val document = FileTreeDocument.fromDomain(userId, fileTrees, documentId)
         val saved = mongoRepository.save(document).awaitSingle()
         return saved.toDomain()
     }
 
-    override suspend fun findById(id: String): FileTree? {
-        val document = mongoRepository.findById(id).awaitSingleOrNull()
+    override suspend fun findByUserId(userId: String): List<FileTree>? {
+        val document = mongoRepository.findByUserId(userId).awaitSingleOrNull()
         return document?.toDomain()
     }
 
-    override fun findAll(): Flow<FileTree> {
-        return mongoRepository.findAll()
+    override suspend fun findDocumentByUserId(userId: String): FileTreeDocument? = mongoRepository.findByUserId(userId).awaitSingleOrNull()
+
+    override suspend fun findDocumentById(documentId: String): FileTreeDocument? = mongoRepository.findById(documentId).awaitSingleOrNull()
+
+    override fun findAll(): Flow<List<FileTree>> =
+        mongoRepository
+            .findAll()
             .asFlow()
             .map { it.toDomain() }
+
+    override suspend fun deleteByUserId(userId: String) {
+        mongoRepository.deleteByUserId(userId).awaitSingleOrNull()
     }
 
-    override suspend fun delete(fileTree: FileTree) {
-        val document = FileTreeDocument.fromDomain(fileTree)
-        mongoRepository.delete(document).awaitSingleOrNull()
-    }
-
-    override suspend fun existsById(id: String): Boolean {
-        return mongoRepository.existsById(id).awaitSingle()
-    }
+    override suspend fun existsByUserId(userId: String): Boolean = mongoRepository.existsByUserId(userId).awaitSingle()
 }

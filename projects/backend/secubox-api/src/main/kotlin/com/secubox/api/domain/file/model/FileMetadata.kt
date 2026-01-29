@@ -14,7 +14,7 @@ data class FileMetadata(
     val mimeType: String,
     val storagePath: String,
     val uploadedAt: Instant = Instant.now(),
-    val referenceCount: Int = 1
+    val referenceCount: Int = 1,
 ) {
     init {
         require(hash.isNotBlank()) { "Hash cannot be blank" }
@@ -23,9 +23,7 @@ data class FileMetadata(
         require(referenceCount > 0) { "Reference count must be positive" }
     }
 
-    fun incrementReference(): FileMetadata {
-        return copy(referenceCount = referenceCount + 1)
-    }
+    fun incrementReference(): FileMetadata = copy(referenceCount = referenceCount + 1)
 
     fun decrementReference(): FileMetadata {
         require(referenceCount > 0) { "Cannot decrement reference count below zero" }

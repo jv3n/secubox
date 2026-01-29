@@ -3,15 +3,14 @@ package com.secubox.api.infrastructure.config
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.reactive.config.CorsRegistry
-import org.springframework.web.reactive.config.EnableWebFlux
 import org.springframework.web.reactive.config.WebFluxConfigurer
 
 @Configuration
 @EnableConfigurationProperties(StorageProperties::class)
 class WebConfig : WebFluxConfigurer {
-
     override fun addCorsMappings(registry: CorsRegistry) {
-        registry.addMapping("/**")
+        registry
+            .addMapping("/**")
             .allowedOrigins("http://localhost:4200", "http://localhost:4201")
             .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
             .allowedHeaders("*")

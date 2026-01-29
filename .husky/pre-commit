@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# Frontend: Run prettier on staged files
+cd projects/frontend/secubox-web
+npx lint-staged
+cd ../../..
+
+# Backend: Run spotless on staged Kotlin files
+STAGED_KOTLIN_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.kt$' | grep '^projects/backend/secubox-api/')
+
+if [ -n "$STAGED_KOTLIN_FILES" ]; then
+  echo "Running spotless on backend files..."
+  cd projects/backend/secubox-api
+  ./gradlew spotlessApply
+  cd ../../..
+
+  # Re-add the formatted files
+  echo "$STAGED_KOTLIN_FILES" | xargs git add
+fi
