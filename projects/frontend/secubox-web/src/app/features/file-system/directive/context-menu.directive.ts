@@ -1,12 +1,12 @@
 import { Directive, ElementRef, HostListener, inject, input, output } from '@angular/core';
-import { FileSystemObject } from '../file-system.model';
+import { TreeObject } from '../file-system.model';
 import { ContextMenu } from './context-menu.model';
 
 @Directive({ selector: '[contextMenu]' })
 export class ContextMenuDirective {
   readonly el = inject(ElementRef<HTMLElement>);
 
-  contextMenu = input.required<FileSystemObject | null>();
+  contextMenu = input.required<TreeObject | null>();
 
   menuRequested = output<ContextMenu>();
   menuClosed = output<void>();

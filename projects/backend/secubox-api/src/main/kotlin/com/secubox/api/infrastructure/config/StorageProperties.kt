@@ -5,5 +5,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "storage")
 data class StorageProperties(
     val basePath: String = "./storage",
-    val maxFileSize: Long = 104857600 // 100MB
+    // 100MB
+    val maxFileSize: Long = 104857600,
 )

@@ -2,46 +2,47 @@ package com.secubox.api.application.filetree.dto
 
 import com.secubox.api.domain.filetree.model.FileTree
 import com.secubox.api.domain.filetree.model.NodeType
-import java.time.Instant
 
-data class FileTreeDTO(
+data class FileTreeNodeDTO(
     val id: String? = null,
     val name: String,
     val type: NodeType,
-    val hash: String? = null,
-    val size: Long? = null,
-    val children: List<FileTreeDTO> = emptyList(),
-    val createdAt: Instant = Instant.now(),
-    val updatedAt: Instant = Instant.now(),
-    val version: Int = 1
+    val path: String? = null,
+    val children: List<FileTreeNodeDTO> = emptyList(),
 ) {
     companion object {
-        fun fromDomain(domain: FileTree): FileTreeDTO {
-            return FileTreeDTO(
+        fun fromDomain(domain: FileTree): FileTreeNodeDTO =
+            FileTreeNodeDTO(
                 id = domain.id,
                 name = domain.name,
                 type = domain.type,
-                hash = domain.hash,
-                size = domain.size,
+                path = domain.path,
                 children = domain.children.map { fromDomain(it) },
-                createdAt = domain.createdAt,
-                updatedAt = domain.updatedAt,
-                version = domain.version
             )
-        }
     }
 
-    fun toDomain(): FileTree {
-        return FileTree(
+    fun toDomain(): FileTree =
+        FileTree(
             id = id,
             name = name,
             type = type,
-            hash = hash,
-            size = size,
+            path = path,
             children = children.map { it.toDomain() },
-            createdAt = createdAt,
-            updatedAt = updatedAt,
-            version = version
         )
+}
+
+data class FileTreeDTO(
+    val id: String,
+    val tree: List<FileTreeNodeDTO>,
+) {
+    companion object {
+        fun fromDomain(
+            id: String,
+            domains: List<FileTree>,
+        ): FileTreeDTO =
+            FileTreeDTO(
+                id = id,
+                tree = domains.map { FileTreeNodeDTO.fromDomain(it) },
+            )
     }
 }

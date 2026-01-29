@@ -8,9 +8,8 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class FileMetadataRepositoryImpl(
-    private val mongoRepository: FileMetadataMongoRepository
+    private val mongoRepository: FileMetadataMongoRepository,
 ) : FileMetadataRepository {
-
     override suspend fun save(fileMetadata: FileMetadata): FileMetadata {
         val document = FileMetadataDocument.fromDomain(fileMetadata)
         val saved = mongoRepository.save(document).awaitSingle()

@@ -5,7 +5,9 @@
         class="column"
         [class.drag-over-column]="dragOverColumnIndex === $index"
         [contextMenu]="null"
-        (menuRequested)="contextMenu.open($event, fileSystemHelper.findParentWithoutTarget($index, selectedObj, data))"
+        (menuRequested)="
+          contextMenu.open($event, fileSystemHelper.findParentWithoutTarget($index, selectedObj, tree()))
+        "
         (menuClosed)="contextMenu.close()"
         (dragover)="onColumnDragOver($event, $index)"
         (dragleave)="onColumnDragLeave()"
@@ -23,7 +25,7 @@
               [contextMenu]="item"
               draggable="true"
               (click)="selectObj(item)"
-              (menuRequested)="contextMenu.open($event, fileSystemHelper.findParent(item, data))"
+              (menuRequested)="contextMenu.open($event, fileSystemHelper.findParent(item, tree()))"
               (menuClosed)="contextMenu.close()"
               (dragstart)="onDragStart($event, item)"
               (dragend)="onDragEnd()"
@@ -61,11 +63,11 @@
     [style.left.px]="contextMenu.state().x"
     (click)="$event.stopPropagation()"
   >
-    <button (click)="contextMenu.createFolder(data)">New Folder</button>
+    <button (click)="contextMenu.createFolder(tree())">New Folder</button>
 
     @if (contextMenu.target) {
       <button (click)="contextMenu.rename()">Rename</button>
-      <button (click)="contextMenu.delete(data)">Delete</button>
+      <button (click)="contextMenu.delete(tree())">Delete</button>
     }
   </div>
 }

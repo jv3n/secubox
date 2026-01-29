@@ -1,36 +1,41 @@
-import { FileSystemObject } from './file-system.model';
+import { TreeObject, TreeObjectType } from './file-system.model';
 
 export class CreateFolder {
   id: string;
+  type: TreeObjectType;
   name: string;
   path: string;
-  childrens?: FileSystemObject[];
+  children?: TreeObject[];
 
-  constructor(obj: Partial<FileSystemObject>) {
+  constructor(obj: Partial<TreeObject>) {
     this.id = crypto.randomUUID();
+    this.type = TreeObjectType.FOLDER;
     this.name = obj.name ?? '';
     this.path = obj.path ?? '/';
-    this.childrens = [];
+    this.children = [];
   }
 
   build() {
     return {
       id: this.id,
+      type: this.type,
       name: this.name,
       path: this.path,
-      childrens: this.childrens,
-    } satisfies FileSystemObject;
+      children: this.children,
+    } satisfies TreeObject;
   }
 }
 
 export class CreateFile {
   id: string;
+  type: TreeObjectType;
   name: string;
   path: string;
   file: File;
 
-  constructor(file: File, parent: FileSystemObject) {
+  constructor(file: File, parent: TreeObject) {
     this.id = crypto.randomUUID();
+    this.type = TreeObjectType.FILE;
     this.name = file.name ?? '';
     this.path = `${parent}/${parent.name}`;
     this.file = file;
@@ -39,9 +44,10 @@ export class CreateFile {
   build() {
     return {
       id: this.id,
+      type: this.type,
       name: this.name,
       path: this.path,
       file: this.file,
-    } satisfies FileSystemObject;
+    } satisfies TreeObject;
   }
 }

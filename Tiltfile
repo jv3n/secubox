@@ -42,6 +42,15 @@ k8s_resource(
     labels=['database']
 )
 
+# MongoDB Purge Button
+local_resource(
+    'mongodb-purge',
+    cmd='kubectl exec $(kubectl get pod -l app=mongodb -o jsonpath="{.items[0].metadata.name}") -- mongosh secubox --eval "db.dropDatabase(); print(\'Database purged successfully\')"',
+    labels=['database'],
+    auto_init=False,
+    trigger_mode=TRIGGER_MODE_MANUAL,
+)
+
 # Backend - Spring Boot Kotlin
 docker_build(
     'secubox-api',
@@ -49,7 +58,14 @@ docker_build(
     dockerfile='./projects/backend/secubox-api/Dockerfile.dev',
     live_update=[
         sync('./projects/backend/secubox-api/src', '/app/src'),
-        run('cd /app && ./gradlew build -x test', trigger=['./projects/backend/secubox-api/src']),
+        # Gradle continuous build will auto-detect changes, no need to manually trigger rebuild
+    ],
+    # Ignore files that don't affect the build
+    ignore=[
+        'build',
+        '.gradle',
+        '*.md',
+        '.git',
     ]
 )
 

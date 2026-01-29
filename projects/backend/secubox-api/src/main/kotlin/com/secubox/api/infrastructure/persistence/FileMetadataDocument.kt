@@ -10,20 +10,18 @@ import java.time.Instant
 data class FileMetadataDocument(
     @Id
     val id: String? = null,
-
     @Indexed(unique = true)
     val hash: String,
-
     val originalName: String,
     val size: Long,
     val mimeType: String,
     val storagePath: String,
     val uploadedAt: Instant = Instant.now(),
-    val referenceCount: Int = 1
+    val referenceCount: Int = 1,
 ) {
     companion object {
-        fun fromDomain(domain: FileMetadata): FileMetadataDocument {
-            return FileMetadataDocument(
+        fun fromDomain(domain: FileMetadata): FileMetadataDocument =
+            FileMetadataDocument(
                 id = domain.id,
                 hash = domain.hash,
                 originalName = domain.originalName,
@@ -31,13 +29,12 @@ data class FileMetadataDocument(
                 mimeType = domain.mimeType,
                 storagePath = domain.storagePath,
                 uploadedAt = domain.uploadedAt,
-                referenceCount = domain.referenceCount
+                referenceCount = domain.referenceCount,
             )
-        }
     }
 
-    fun toDomain(): FileMetadata {
-        return FileMetadata(
+    fun toDomain(): FileMetadata =
+        FileMetadata(
             id = id,
             hash = hash,
             originalName = originalName,
@@ -45,7 +42,6 @@ data class FileMetadataDocument(
             mimeType = mimeType,
             storagePath = storagePath,
             uploadedAt = uploadedAt,
-            referenceCount = referenceCount
+            referenceCount = referenceCount,
         )
-    }
 }

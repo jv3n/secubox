@@ -2,13 +2,9 @@ package com.secubox.api.application.filetree
 
 import com.secubox.api.application.filetree.dto.FileTreeDTO
 import com.secubox.api.domain.filetree.model.FileTree
-import com.secubox.api.domain.filetree.model.NodeType
 import com.secubox.api.domain.filetree.repository.FileTreeRepository
 import com.secubox.api.domain.filetree.service.FileTreeDomainService
-import com.secubox.api.presentation.rest.dto.TreeUpdateCommand
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
+import com.secubox.api.presentation.rest.dto.TreeObjectUpdateCommand
 import org.springframework.stereotype.Service
 
 /**
@@ -18,86 +14,75 @@ import org.springframework.stereotype.Service
 @Service
 class FileTreeApplicationService(
     private val fileTreeRepository: FileTreeRepository,
-    private val fileTreeDomainService: FileTreeDomainService
+    private val fileTreeDomainService: FileTreeDomainService,
 ) {
-
-    suspend fun createTree(dto: FileTreeDTO): FileTreeDTO {
-        val domain = dto.toDomain()
-        val saved = fileTreeRepository.save(domain)
-        return FileTreeDTO.fromDomain(saved)
+    suspend fun getTree(userId: String): FileTreeDTO? {
+        val document = fileTreeRepository.findDocumentByUserId(userId) ?: return null
+        val domains = document.toDomain()
+        return FileTreeDTO.fromDomain(document.id!!, domains)
     }
 
-    suspend fun getTree(id: String): FileTreeDTO? {
-        val domain = fileTreeRepository.findById(id) ?: return null
-        return FileTreeDTO.fromDomain(domain)
+    suspend fun updateTree(
+        documentId: String,
+        commands: List<TreeObjectUpdateCommand>,
+    ): FileTreeDTO? {
+        // Find document by its MongoDB _id
+        val existingDocument = fileTreeRepository.findDocumentById(documentId) ?: return null
+
+        // Convert TreeUpdateCommand list to FileTree domain models and recalculate paths
+        val updated = commands.map { commandToDomain(it, "/") }
+
+        // Save with the same userId and documentId
+        val saved = fileTreeRepository.saveForUser(existingDocument.userId, updated, existingDocument.id)
+        return FileTreeDTO.fromDomain(existingDocument.id!!, saved)
     }
 
-    fun getAllTrees(): Flow<FileTreeDTO> {
-        return fileTreeRepository.findAll()
-            .map { FileTreeDTO.fromDomain(it) }
-    }
-
-    suspend fun updateTree(id: String, command: TreeUpdateCommand): FileTreeDTO? {
-        val existing = fileTreeRepository.findById(id) ?: return null
-
-        // Convert TreeUpdateCommand to FileTree domain model
-        val updated = commandToDomain(command).copy(
-            id = id,
-            version = existing.version + 1
-        )
-
-        val saved = fileTreeRepository.save(updated)
-        return FileTreeDTO.fromDomain(saved)
-    }
-
-    private fun commandToDomain(command: TreeUpdateCommand): FileTree {
-        val nodeType = if (command.file != null) NodeType.FILE else NodeType.FOLDER
+    private fun commandToDomain(
+        command: TreeObjectUpdateCommand,
+        parentPath: String,
+    ): FileTree {
+        val currentPath = parentPath
+        val children =
+            command.children?.map {
+                commandToDomain(it, buildPath(parentPath, command.name))
+            } ?: emptyList()
 
         return FileTree(
             id = command.id,
             name = command.name,
-            type = nodeType,
-            hash = command.file?.name,
-            size = command.file?.size,
-            children = command.childrens?.map { commandToDomain(it) } ?: emptyList()
+            type = command.type,
+            path = currentPath,
+            children = children,
         )
     }
 
-    suspend fun deleteTree(id: String): Boolean {
-        val existing = fileTreeRepository.findById(id) ?: return false
-        fileTreeRepository.delete(existing)
-        return true
-    }
+    private fun buildPath(
+        parentPath: String,
+        name: String,
+    ): String =
+        if (parentPath == "/") {
+            "/$name"
+        } else {
+            "$parentPath/$name"
+        }
 
     /**
      * Get or create the root file tree with default RH structure
      */
     suspend fun getRootTree(): FileTreeDTO {
-        val existingTrees = fileTreeRepository.findAll().toList()
+        // TODO: Use actual user ID from authentication context
+        val userId = "default-user"
 
-        if (existingTrees.isNotEmpty()) {
-            return FileTreeDTO.fromDomain(existingTrees.first())
+        // Check if user already has a tree
+        val existingDocument = fileTreeRepository.findDocumentByUserId(userId)
+        if (existingDocument != null) {
+            return FileTreeDTO.fromDomain(existingDocument.id!!, existingDocument.toDomain())
         }
 
-        // Create default RH structure using domain service
+        // Create default tree if not exists
         val defaultTree = fileTreeDomainService.createDefaultRHStructure()
-        val saved = fileTreeRepository.save(defaultTree)
-        return FileTreeDTO.fromDomain(saved)
-    }
-
-    /**
-     * Update the root tree
-     */
-    suspend fun updateRootTree(command: TreeUpdateCommand): FileTreeDTO {
-        val existingTrees = fileTreeRepository.findAll().toList()
-        val existingRoot = existingTrees.firstOrNull()
-
-        val updated = commandToDomain(command).copy(
-            id = existingRoot?.id,
-            version = (existingRoot?.version ?: 0) + 1
-        )
-
-        val saved = fileTreeRepository.save(updated)
-        return FileTreeDTO.fromDomain(saved)
+        val saved = fileTreeRepository.saveForUser(userId, listOf(defaultTree))
+        val document = fileTreeRepository.findDocumentByUserId(userId)!!
+        return FileTreeDTO.fromDomain(document.id!!, saved)
     }
 }

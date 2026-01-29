@@ -7,7 +7,10 @@ import com.secubox.api.domain.file.model.FileMetadata
  */
 interface FileMetadataRepository {
     suspend fun save(fileMetadata: FileMetadata): FileMetadata
+
     suspend fun findById(id: String): FileMetadata?
+
     suspend fun findByHash(hash: String): FileMetadata?
+
     suspend fun delete(fileMetadata: FileMetadata)
 }

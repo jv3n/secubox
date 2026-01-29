@@ -5,9 +5,13 @@ WORKDIR /app
 
 # Copy gradle files
 COPY build.gradle.kts settings.gradle.kts gradle.properties ./
+COPY gradle ./gradle
 
 # Download dependencies (cache layer)
 RUN gradle dependencies --no-daemon || true
+
+# Pre-build to cache Gradle wrapper and plugins
+RUN gradle build -x test --no-daemon || true
 
 # Copy source code
 COPY src ./src
@@ -15,5 +19,8 @@ COPY src ./src
 # Expose port
 EXPOSE 8080
 
-# Run application with bootRun for hot reload
-CMD ["gradle", "bootRun", "--no-daemon"]
+# Set JVM options for faster startup
+ENV JAVA_OPTS="-XX:TieredStopAtLevel=1 -XX:+UseParallelGC -Xms512m -Xmx1g"
+
+# Use bootRun with optimizations (removed --continuous as it can cause issues)
+CMD ["gradle", "bootRun", "--no-daemon", "-x", "test", "--parallel", "--build-cache"]

@@ -1,36 +1,32 @@
 import { Injectable } from '@angular/core';
-import { FileSystemObject } from './file-system.model';
+import { TreeObject } from './file-system.model';
 
 @Injectable({ providedIn: 'root' })
 export class FileSystemHelper {
-  findParent(obj: FileSystemObject | null, tree: FileSystemObject[]): FileSystemObject | null {
+  findParent(obj: TreeObject | null, tree: TreeObject[]): TreeObject | null {
     for (const node of tree) {
-      if (node.childrens?.some((child) => child.id === obj?.id)) {
+      if (node.children?.some((child) => child.id === obj?.id)) {
         return node;
       }
-      if (node.childrens?.length) {
-        const parent = this.findParent(obj, node.childrens);
+      if (node.children?.length) {
+        const parent = this.findParent(obj, node.children);
         if (parent) return parent;
       }
     }
     return null;
   }
 
-  findParentWithoutTarget(
-    columnIndex: number,
-    selectedObj: FileSystemObject | null,
-    tree: FileSystemObject[],
-  ): FileSystemObject | null {
+  findParentWithoutTarget(columnIndex: number, selectedObj: TreeObject | null, tree: TreeObject[]): TreeObject | null {
     if (!selectedObj || columnIndex === 0) {
       return null;
     }
 
     let currentChildren = tree;
-    let current: FileSystemObject | null = null;
+    let current: TreeObject | null = null;
 
     // build the path stack from root to selectedObj
-    const pathStack: FileSystemObject[] = [];
-    let node: FileSystemObject | null = selectedObj;
+    const pathStack: TreeObject[] = [];
+    let node: TreeObject | null = selectedObj;
     while (node) {
       pathStack.unshift(node);
       node = this.findParent(node, tree);
@@ -42,7 +38,7 @@ export class FileSystemHelper {
       if (!current) {
         break;
       }
-      currentChildren = current.childrens ?? [];
+      currentChildren = current.children ?? [];
     }
 
     return current ?? this.findParent(selectedObj, tree);

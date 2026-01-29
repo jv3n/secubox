@@ -1,30 +1,32 @@
 import { TestBed } from '@angular/core/testing';
 import { ContextMenu } from '../directive/context-menu.model';
 import { ContextMenuService } from '../directive/context-menu.service';
-import { FileSystemObject } from '../file-system.model';
+import { TreeObject, TreeObjectType } from '../file-system.model';
 
 describe('ContextMenuService', () => {
   let service: ContextMenuService;
 
-  let rootData: FileSystemObject[];
-  let rootFolder: FileSystemObject;
-  let childFolder: FileSystemObject;
+  let rootData: TreeObject[];
+  let rootFolder: TreeObject;
+  let childFolder: TreeObject;
 
   beforeEach(() => {
     service = TestBed.inject(ContextMenuService);
 
     childFolder = {
       id: 'child_1',
+      type: TreeObjectType.FOLDER,
       name: 'Projects',
       path: '/Documents',
-      childrens: [],
+      children: [],
     };
 
     rootFolder = {
       id: 'root_docs',
+      type: TreeObjectType.FOLDER,
       name: 'Documents',
       path: '/',
-      childrens: [childFolder],
+      children: [childFolder],
     };
 
     rootData = [rootFolder];
@@ -83,7 +85,7 @@ describe('ContextMenuService', () => {
       expect(rootData.length).toBe(2);
       expect(rootData[1].name).toBe('New Root Folder');
       expect(rootData[1].path).toBe('/');
-      expect(rootData[1].childrens).toEqual([]);
+      expect(rootData[1].children).toEqual([]);
     });
 
     it('should create a folder inside a parent folder', () => {
@@ -93,11 +95,11 @@ describe('ContextMenuService', () => {
       service.open(evt, rootFolder);
       service.createFolder(rootData);
 
-      expect(rootFolder.childrens!.length).toBe(2);
-      const created = rootFolder.childrens![1];
+      expect(rootFolder.children!.length).toBe(2);
+      const created = rootFolder.children![1];
       expect(created.name).toBe('Child Folder');
       expect(created.path).toBe('/Documents');
-      expect(created.childrens).toEqual([]);
+      expect(created.children).toEqual([]);
     });
 
     it('should not create folder if prompt is cancelled', () => {
@@ -107,7 +109,7 @@ describe('ContextMenuService', () => {
       service.open(evt, rootFolder);
       service.createFolder(rootData);
 
-      expect(rootFolder.childrens!.length).toBe(1);
+      expect(rootFolder.children!.length).toBe(1);
     });
   });
 
@@ -144,12 +146,12 @@ describe('ContextMenuService', () => {
   });
 
   describe('delete', () => {
-    it('should delete target from parent childrens', () => {
+    it('should delete target from parent children', () => {
       const evt = { x: 0, y: 0, target: childFolder } satisfies ContextMenu;
       service.open(evt, rootFolder);
       service.delete(rootData);
 
-      expect(rootFolder.childrens!.length).toBe(0);
+      expect(rootFolder.children!.length).toBe(0);
       expect(service.isOpen).toBe(false);
     });
 
@@ -168,18 +170,19 @@ describe('ContextMenuService', () => {
       service.delete(rootData);
 
       expect(rootData.length).toBe(1);
-      expect(rootFolder.childrens!.length).toBe(1);
+      expect(rootFolder.children!.length).toBe(1);
     });
   });
 
   it('should create a folder inside an empty folder instead of root', () => {
     const emptyFolder = {
       id: 'empty_1',
+      type: TreeObjectType.FOLDER,
       name: 'Empty Folder',
       path: '/Documents',
-      childrens: [],
-    } satisfies FileSystemObject;
-    rootFolder.childrens!.push(emptyFolder);
+      children: [],
+    } satisfies TreeObject;
+    rootFolder.children!.push(emptyFolder);
 
     vi.spyOn(window, 'prompt').mockReturnValue('Nested Folder');
 
@@ -188,11 +191,11 @@ describe('ContextMenuService', () => {
     service.open(evt, emptyFolder);
     service.createFolder(rootData);
 
-    expect(emptyFolder.childrens!.length).toBe(1);
-    const created = emptyFolder.childrens![0] as FileSystemObject;
+    expect(emptyFolder.children!.length).toBe(1);
+    const created = emptyFolder.children![0] as TreeObject;
     expect(created.name).toBe('Nested Folder');
     expect(created.path).toBe('/Documents/Empty Folder');
-    expect(created.childrens).toEqual([]);
+    expect(created.children).toEqual([]);
 
     // rootData should stay unchanged (except for emptyFolder already there)
     expect(rootData.length).toBe(1);

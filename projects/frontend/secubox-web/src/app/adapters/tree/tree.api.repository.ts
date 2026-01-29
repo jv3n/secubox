@@ -1,29 +1,29 @@
-import { inject, Injectable } from '@angular/core';
-import { Observable, map } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { FileSystemObject } from '../../features/file-system/file-system.model';
+import { inject, Injectable } from '@angular/core';
+import { map, Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { Tree } from '../../features/file-system/file-system.model';
 import { TreeApiResponse } from './api-data-transfert-object/tree.api.response';
 import { TreeMapper } from './mapper/tree.mapper';
-import { environment } from '../../../environments/environment';
 
 @Injectable()
 export class TreeApiRepository {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiBaseUrl;
 
-  getRootTree(): Observable<FileSystemObject> {
-    return this.http
-      .get<TreeApiResponse>(`${this.baseUrl}/file-tree/root`)
-      .pipe(map(TreeMapper.toTree));
+  get(id: string | null): Observable<Tree> {
+    const uri = id ? `${this.baseUrl}/file-tree` : `${this.baseUrl}/file-tree/${id}`;
+
+    return this.http.get<TreeApiResponse>(uri).pipe(map(TreeMapper.toTree));
   }
 
-  update(req: FileSystemObject): Observable<FileSystemObject> {
-    const endpoint = req.id === 'root'
-      ? `${this.baseUrl}/file-tree/root`
-      : `${this.baseUrl}/file-tree/${req.id}`;
+  update(req: Tree): Observable<Tree> {
+    if (!req.id) {
+      throw new Error('Tree id is required for update operation');
+    }
 
     return this.http
-      .put<TreeApiResponse>(endpoint, TreeMapper.toCommand(req))
+      .put<TreeApiResponse>(`${this.baseUrl}/file-tree`, TreeMapper.toCommand(req))
       .pipe(map(TreeMapper.toTree));
   }
 }
